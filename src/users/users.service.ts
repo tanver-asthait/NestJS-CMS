@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt';
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
 
-  async create(createUserDto: CreateUserDto): Promise<User> {
+  async create(createUserDto: CreateUserDto): Promise<UserDocument> {
     // Check if user already exists
     const existingUser = await this.userModel.findOne({ email: createUserDto.email });
     if (existingUser) {
@@ -41,7 +41,7 @@ export class UsersService {
     return user;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email }).exec();
   }
 
