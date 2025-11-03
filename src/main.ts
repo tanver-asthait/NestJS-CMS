@@ -7,6 +7,14 @@ async function bootstrap() {
     console.log('Starting BDJobs CMS application...');
     const app = await NestFactory.create(AppModule);
     
+    // Enable CORS for Angular frontend
+    app.enableCors({
+      origin: ['http://localhost:4200', 'http://127.0.0.1:4200'], // Angular dev server
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+    });
+    
     // Enable validation
     app.useGlobalPipes(new ValidationPipe({
       whitelist: true,

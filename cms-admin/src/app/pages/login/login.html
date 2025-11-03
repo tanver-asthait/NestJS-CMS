@@ -1,0 +1,59 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h2>CMS Admin Login</h2>
+      <p>Sign in to your account</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input 
+          type="email" 
+          id="email"
+          formControlName="email"
+          class="form-control"
+          [class.is-invalid]="email?.invalid && email?.touched"
+          placeholder="Enter your email"
+        >
+        <div *ngIf="email?.invalid && email?.touched" class="invalid-feedback">
+          <div *ngIf="email?.errors?.['required']">Email is required</div>
+          <div *ngIf="email?.errors?.['email']">Please enter a valid email</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password"
+          formControlName="password"
+          class="form-control"
+          [class.is-invalid]="password?.invalid && password?.touched"
+          placeholder="Enter your password"
+        >
+        <div *ngIf="password?.invalid && password?.touched" class="invalid-feedback">
+          <div *ngIf="password?.errors?.['required']">Password is required</div>
+          <div *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</div>
+        </div>
+      </div>
+
+      <div *ngIf="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn btn-primary btn-block"
+        [disabled]="loginForm.invalid || loading"
+      >
+        <span *ngIf="loading" class="spinner"></span>
+        {{ loading ? 'Signing in...' : 'Sign In' }}
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>Don't have an account? Contact your administrator.</p>
+    </div>
+  </div>
+</div>
