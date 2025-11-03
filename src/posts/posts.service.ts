@@ -5,6 +5,23 @@ import { Post, PostDocument, PostStatus } from './schemas/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
+export interface PostsResponse {
+  posts: Post[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PostQueryParams {
+  page?: number;
+  limit?: number;
+  status?: PostStatus;
+  author?: string;
+  search?: string;
+  tags?: string[];
+}
+
 @Injectable()
 export class PostsService {
   constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
@@ -26,12 +43,61 @@ export class PostsService {
     return createdPost.save();
   }
 
-  async findAll(): Promise<Post[]> {
-    return this.postModel
-      .find()
-      .populate('author', 'firstName lastName email')
-      .sort({ createdAt: -1 })
-      .exec();
+  async findAll(queryParams: PostQueryParams = {}): Promise<PostsResponse> {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      author,
+      search,
+      tags,
+    } = queryParams;
+
+    // Build filter object
+    const filter: any = {};
+    
+    if (status) {
+      filter.status = status;
+    }
+    
+    if (author) {
+      filter.author = author;
+    }
+    
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+        { excerpt: { $regex: search, $options: 'i' } },
+      ];
+    }
+    
+    if (tags && tags.length > 0) {
+      filter.tags = { $in: tags };
+    }
+
+    const skip = (page - 1) * limit;
+    
+    const [posts, total] = await Promise.all([
+      this.postModel
+        .find(filter)
+        .populate('author', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.postModel.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      posts,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
   async findPublished(): Promise<Post[]> {
@@ -104,19 +170,107 @@ export class PostsService {
     return updatedPost;
   }
 
-  async findByAuthor(authorId: string): Promise<Post[]> {
-    return this.postModel
-      .find({ author: authorId })
-      .populate('author', 'firstName lastName email')
-      .sort({ createdAt: -1 })
-      .exec();
+  async findByAuthor(authorId: string, queryParams: PostQueryParams = {}): Promise<PostsResponse> {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      search,
+      tags,
+    } = queryParams;
+
+    // Build filter object
+    const filter: any = { author: authorId };
+    
+    if (status) {
+      filter.status = status;
+    }
+    
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+        { excerpt: { $regex: search, $options: 'i' } },
+      ];
+    }
+    
+    if (tags && tags.length > 0) {
+      filter.tags = { $in: tags };
+    }
+
+    const skip = (page - 1) * limit;
+    
+    const [posts, total] = await Promise.all([
+      this.postModel
+        .find(filter)
+        .populate('author', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.postModel.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      posts,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
-  async findByTag(tag: string): Promise<Post[]> {
-    return this.postModel
-      .find({ tags: { $in: [tag] } })
-      .populate('author', 'firstName lastName email')
-      .sort({ createdAt: -1 })
-      .exec();
+  async findByTag(tag: string, queryParams: PostQueryParams = {}): Promise<PostsResponse> {
+    const {
+      page = 1,
+      limit = 10,
+      status,
+      author,
+      search,
+    } = queryParams;
+
+    // Build filter object
+    const filter: any = { tags: { $in: [tag] } };
+    
+    if (status) {
+      filter.status = status;
+    }
+    
+    if (author) {
+      filter.author = author;
+    }
+    
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { content: { $regex: search, $options: 'i' } },
+        { excerpt: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+    
+    const [posts, total] = await Promise.all([
+      this.postModel
+        .find(filter)
+        .populate('author', 'firstName lastName email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .exec(),
+      this.postModel.countDocuments(filter),
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      posts,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 }

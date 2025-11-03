@@ -13,10 +13,10 @@
           id="email"
           formControlName="email"
           class="form-control"
-          [class.is-invalid]="email?.invalid && email?.touched"
+          [class.is-invalid]="email?.invalid && (email?.touched || submitted)"
           placeholder="Enter your email"
         >
-        <div *ngIf="email?.invalid && email?.touched" class="invalid-feedback">
+        <div *ngIf="email?.invalid && (email?.touched || submitted)" class="invalid-feedback">
           <div *ngIf="email?.errors?.['required']">Email is required</div>
           <div *ngIf="email?.errors?.['email']">Please enter a valid email</div>
         </div>
@@ -32,20 +32,21 @@
           [class.is-invalid]="password?.invalid && password?.touched"
           placeholder="Enter your password"
         >
-        <div *ngIf="password?.invalid && password?.touched" class="invalid-feedback">
+        <div *ngIf="password?.invalid && (password?.touched || submitted)" class="invalid-feedback">
           <div *ngIf="password?.errors?.['required']">Password is required</div>
           <div *ngIf="password?.errors?.['minlength']">Password must be at least 6 characters</div>
         </div>
       </div>
 
-      <div *ngIf="error" class="alert alert-danger">
+      <div *ngIf="error" class="alert alert-danger" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
         {{ error }}
       </div>
 
       <button 
         type="submit" 
         class="btn btn-primary btn-block"
-        [disabled]="loginForm.invalid || loading"
+        [disabled]="loading"
       >
         <span *ngIf="loading" class="spinner"></span>
         {{ loading ? 'Signing in...' : 'Sign In' }}
@@ -53,7 +54,7 @@
     </form>
 
     <div class="login-footer">
-      <p>Don't have an account? Contact your administrator.</p>
+      <p>Don't have an account? <a routerLink="/register" class="register-link">Create one here</a></p>
     </div>
   </div>
 </div>

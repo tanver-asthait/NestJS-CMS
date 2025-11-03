@@ -1,0 +1,51 @@
+<header class="topbar">
+  <div class="brand">CMS Admin</div>
+  <div class="topbar-actions">
+    <button class="btn" (click)="toggleSidebar()">☰</button>
+    <!-- user area -->
+    <div class="user-area">
+      @if (getCurrentUser()) {
+        <span class="user-name">{{ getCurrentUser()?.firstName }} {{ getCurrentUser()?.lastName }}</span>
+        <button class="btn btn-logout" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i>
+          Logout
+        </button>
+      }
+    </div>
+  </div>
+</header>
+
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed()">
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      @if(!sidebarCollapsed()) {
+        <h3>CMS Admin</h3>
+      } @else {
+        <h3>CMS</h3>
+      }
+    </div>
+
+    <ul class="sidebar-menu">
+      @for (item of menuItems(); track item.link) {
+        <li class="menu-item">
+          <a [routerLink]="item.link" class="menu-link" routerLinkActive="active">
+            <i class="{{ item.icon }}"></i>
+            @if(!sidebarCollapsed()) {
+              <span>{{ item.label }}</span>
+            }
+          </a>
+        </li>
+      }
+    </ul>
+
+    <div class="sidebar-footer">
+      <button class="sidebar-toggle" (click)="toggleSidebar()">
+        @if(!sidebarCollapsed()) { Collapse } @else { Expand }
+      </button>
+    </div>
+  </nav>
+
+  <main class="main-content">
+    <router-outlet />
+  </main>
+</div>

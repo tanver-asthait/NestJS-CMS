@@ -1,4 +1,4 @@
-.login-container {
+.register-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -7,35 +7,46 @@
   padding: 20px;
 }
 
-.login-card {
+.register-card {
   background: white;
   border-radius: 12px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
   padding: 40px;
 }
 
-.login-header {
+.register-header {
   text-align: center;
   margin-bottom: 30px;
 }
 
-.login-header h2 {
+.register-header h2 {
   color: #333;
   margin: 0 0 10px 0;
   font-weight: 600;
 }
 
-.login-header p {
+.register-header p {
   color: #666;
   margin: 0;
 }
 
-.login-form {
+.register-form {
+  .form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
   .form-group {
     margin-bottom: 20px;
+
+    &.half-width {
+      flex: 1;
+      margin-bottom: 0;
+    }
   }
 
   label {
@@ -52,6 +63,7 @@
     border-radius: 8px;
     font-size: 14px;
     transition: border-color 0.3s ease;
+    box-sizing: border-box;
 
     &:focus {
       outline: none;
@@ -64,6 +76,11 @@
     }
   }
 
+  select.form-control {
+    background-color: white;
+    cursor: pointer;
+  }
+
   .invalid-feedback {
     color: #dc3545;
     font-size: 12px;
@@ -74,11 +91,20 @@
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     
     &.alert-danger {
       background-color: #f8d7da;
       border-color: #f5c6cb;
       color: #721c24;
+    }
+
+    &.alert-success {
+      background-color: #d4edda;
+      border-color: #c3e6cb;
+      color: #155724;
     }
   }
 
@@ -122,7 +148,7 @@
   }
 }
 
-.login-footer {
+.register-footer {
   text-align: center;
   margin-top: 30px;
   padding-top: 20px;
@@ -134,7 +160,7 @@
     font-size: 14px;
   }
 
-  .register-link {
+  .login-link {
     color: #667eea;
     text-decoration: none;
     font-weight: 500;
@@ -148,4 +174,21 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+// Responsive design
+@media (max-width: 576px) {
+  .register-card {
+    padding: 30px 20px;
+    max-width: 100%;
+  }
+
+  .register-form .form-row {
+    flex-direction: column;
+    gap: 0;
+
+    .form-group.half-width {
+      margin-bottom: 20px;
+    }
+  }
 }

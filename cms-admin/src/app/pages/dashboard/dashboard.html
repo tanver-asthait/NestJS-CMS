@@ -1,1 +1,96 @@
-<p>dashboard works!</p>
+<!-- Dashboard Content -->
+<div class="dashboard-content">
+  <!-- Welcome Section -->
+  <div class="welcome-section">
+    <h2>Welcome back, {{ user?.firstName || 'Admin' }}!</h2>
+    <p>{{ currentDate | date:'fullDate' }}</p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon posts">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <div class="stat-info">
+        <h3>{{ stats.totalPosts }}</h3>
+        <p>Total Posts</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon categories">
+        <i class="fas fa-tags"></i>
+      </div>
+      <div class="stat-info">
+        <h3>{{ stats.totalCategories }}</h3>
+        <p>Categories</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon users">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="stat-info">
+        <h3>{{ stats.totalUsers }}</h3>
+        <p>Users</p>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon views">
+        <i class="fas fa-eye"></i>
+      </div>
+      <div class="stat-info">
+        <h3>{{ stats.totalViews }}</h3>
+        <p>Total Views</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Activity -->
+  <div class="activity-section">
+    <div class="section-header">
+      <h3>Recent Activity</h3>
+    </div>
+
+    <div class="activity-list">
+      @for (activity of recentActivities; track activity.action) {
+        <div class="activity-item">
+          <div class="activity-icon">
+            <i class="fas fa-clock"></i>
+          </div>
+          <div class="activity-content">
+            <p class="activity-title">{{ activity.action }}</p>
+            <p class="activity-details">{{ activity.details }}</p>
+            <p class="activity-time">{{ activity.time }}</p>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="actions-section">
+    <h3>Quick Actions</h3>
+    <div class="actions-grid">
+      <button class="action-btn" (click)="navigateTo('/posts/create')">
+        <i class="fas fa-plus"></i>
+        <span>Create Post</span>
+      </button>
+      <button class="action-btn" (click)="navigateTo('/categories/create')">
+        <i class="fas fa-tag"></i>
+        <span>Add Category</span>
+      </button>
+      <button class="action-btn" (click)="navigateTo('/users')">
+        <i class="fas fa-user-plus"></i>
+        <span>Manage Users</span>
+      </button>
+      <button class="action-btn" (click)="navigateTo('/settings')">
+        <i class="fas fa-cog"></i>
+        <span>Settings</span>
+      </button>
+    </div>
+  </div>
+</div>

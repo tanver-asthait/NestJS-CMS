@@ -11,10 +11,11 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { PostsService } from './posts.service';
+import { PostsService, PostQueryParams } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { PostStatus } from './schemas/post.schema';
 
 @Controller('posts')
 export class PostsController {
@@ -28,21 +29,69 @@ export class PostsController {
   }
 
   @Get()
-  findAll(@Query('published') published?: string) {
+  findAll(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: PostStatus,
+    @Query('author') author?: string,
+    @Query('search') search?: string,
+    @Query('tags') tags?: string,
+    @Query('published') published?: string,
+  ) {
     if (published === 'true') {
       return this.postsService.findPublished();
     }
-    return this.postsService.findAll();
+
+    const queryParams: PostQueryParams = {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      status,
+      author,
+      search,
+      tags: tags ? tags.split(',') : undefined,
+    };
+
+    return this.postsService.findAll(queryParams);
   }
 
   @Get('author/:authorId')
-  findByAuthor(@Param('authorId') authorId: string) {
-    return this.postsService.findByAuthor(authorId);
+  findByAuthor(
+    @Param('authorId') authorId: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: PostStatus,
+    @Query('search') search?: string,
+    @Query('tags') tags?: string,
+  ) {
+    const queryParams: PostQueryParams = {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      status,
+      search,
+      tags: tags ? tags.split(',') : undefined,
+    };
+
+    return this.postsService.findByAuthor(authorId, queryParams);
   }
 
   @Get('tag/:tag')
-  findByTag(@Param('tag') tag: string) {
-    return this.postsService.findByTag(tag);
+  findByTag(
+    @Param('tag') tag: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('status') status?: PostStatus,
+    @Query('author') author?: string,
+    @Query('search') search?: string,
+  ) {
+    const queryParams: PostQueryParams = {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+      status,
+      author,
+      search,
+    };
+
+    return this.postsService.findByTag(tag, queryParams);
   }
 
   @Get('slug/:slug')
