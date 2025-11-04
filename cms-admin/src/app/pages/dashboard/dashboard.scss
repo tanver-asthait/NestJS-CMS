@@ -1,220 +1,8 @@
-.dashboard-container {
-  display: flex;
-  min-height: 100vh;
-  background-color: #f8f9fa;
-}
-
-/* Sidebar Styles */
-.sidebar {
-  width: 260px;
-  background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
-  color: white;
-  position: fixed;
-  height: 100vh;
-  overflow-y: auto;
-  transition: all 0.3s ease;
-  z-index: 1000;
-}
-
-.sidebar-collapsed .sidebar {
-  width: 70px;
-}
-
-.sidebar-header {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.sidebar-header h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
-}
-
-.sidebar-menu {
-  list-style: none;
-  padding: 0;
-  margin: 20px 0;
-}
-
-.menu-item {
-  margin: 5px 0;
-}
-
-.menu-link {
-  display: flex;
-  align-items: center;
-  padding: 15px 20px;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.menu-link:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-.menu-item.active .menu-link {
-  background-color: rgba(255, 255, 255, 0.15);
-  color: white;
-  border-right: 3px solid #3498db;
-}
-
-.menu-link i {
-  width: 20px;
-  text-align: center;
-  margin-right: 15px;
-  font-size: 1.1rem;
-}
-
-.sidebar-collapsed .menu-link span {
-  display: none;
-}
-
-.sidebar-collapsed .menu-link {
-  justify-content: center;
-  padding: 15px 10px;
-}
-
-.sidebar-collapsed .menu-link i {
-  margin-right: 0;
-}
-
-/* Main Content Styles */
-.main-content {
-  flex: 1;
-  margin-left: 260px;
-  transition: margin-left 0.3s ease;
-}
-
-.sidebar-collapsed .main-content {
-  margin-left: 70px;
-}
-
-/* Header Styles */
-.header {
-  background: white;
-  padding: 0 30px;
-  height: 70px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-}
-
-.sidebar-toggle {
-  background: none;
-  border: none;
-  font-size: 1.2rem;
-  color: #666;
-  cursor: pointer;
-  margin-right: 20px;
-  padding: 10px;
-  border-radius: 4px;
-  transition: background-color 0.3s ease;
-}
-
-.sidebar-toggle:hover {
-  background-color: #f8f9fa;
-}
-
-.header h1 {
-  margin: 0;
-  color: #333;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.user-name {
-  margin-right: 10px;
-  color: #666;
-  font-weight: 500;
-}
-
-.user-dropdown {
-  position: relative;
-}
-
-.user-avatar {
-  background: none;
-  border: none;
-  font-size: 1.8rem;
-  color: #666;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 50%;
-  transition: color 0.3s ease;
-}
-
-.user-avatar:hover {
-  color: #3498db;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  min-width: 150px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
-}
-
-.user-dropdown:hover .dropdown-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  color: #333;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.dropdown-item:hover {
-  background-color: #f8f9fa;
-}
-
-.dropdown-item i {
-  margin-right: 8px;
-  width: 16px;
-}
-
-/* Content Styles */
-.content {
+/* Dashboard Content Styles */
+.dashboard-content {
   padding: 30px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .welcome-section {
@@ -298,8 +86,8 @@
   font-size: 0.9rem;
 }
 
-/* Content Sections */
-.content-section {
+/* Activity Section */
+.activity-section {
   background: white;
   border-radius: 12px;
   padding: 25px;
@@ -318,134 +106,141 @@
   font-weight: 600;
 }
 
-/* Activities List - spacing handled by individual items */
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
 
 .activity-item {
   display: flex;
-  justify-content: space-between;
   align-items: flex-start;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
 }
 
-.activity-item:last-child {
-  border-bottom: none;
+.activity-item:hover {
+  background: #e9ecef;
 }
 
-.activity-content h4 {
+.activity-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.activity-content {
+  flex: 1;
+}
+
+.activity-title {
   margin: 0 0 5px 0;
   color: #333;
   font-size: 1rem;
   font-weight: 500;
 }
 
-.activity-content p {
-  margin: 0;
+.activity-details {
+  margin: 0 0 3px 0;
   color: #666;
   font-size: 0.9rem;
 }
 
 .activity-time {
+  margin: 0;
   color: #999;
   font-size: 0.8rem;
-  white-space: nowrap;
 }
 
-/* Quick Actions */
-.quick-actions {
-  display: flex;
+/* Actions Section */
+.actions-section {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.actions-section h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 15px;
-  flex-wrap: wrap;
 }
 
 .action-btn {
   display: flex;
   align-items: center;
-  padding: 12px 20px;
+  justify-content: center;
+  padding: 15px 20px;
   border: none;
   border-radius: 8px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
-}
-
-.action-btn i {
-  margin-right: 8px;
-}
-
-.action-btn.primary {
   background: linear-gradient(135deg, #3498db, #2980b9);
   color: white;
 }
 
-.action-btn.primary:hover {
+.action-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
 }
 
-.action-btn.secondary {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  color: white;
+.action-btn i {
+  margin-right: 8px;
+  font-size: 1.1rem;
 }
 
-.action-btn.secondary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
-}
-
-.action-btn.tertiary {
-  background: linear-gradient(135deg, #f39c12, #e67e22);
-  color: white;
-}
-
-.action-btn.tertiary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+.action-btn span {
+  font-size: 0.95rem;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .sidebar-collapsed .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .main-content {
-    margin-left: 0;
-  }
-
-  .sidebar-collapsed .main-content {
-    margin-left: 0;
-  }
-
-  .header {
-    padding: 0 20px;
-  }
-
-  .content {
+  .dashboard-content {
     padding: 20px;
   }
 
   .stats-grid {
     grid-template-columns: 1fr;
+    gap: 15px;
   }
 
-  .quick-actions {
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-item {
     flex-direction: column;
+    align-items: flex-start;
   }
 
-  .action-btn {
-    justify-content: center;
+  .activity-icon {
+    margin-bottom: 10px;
+    margin-right: 0;
   }
 }
 
 @media (max-width: 480px) {
-  .header h1 {
-    font-size: 1.2rem;
+  .dashboard-content {
+    padding: 15px;
   }
 
   .welcome-section h2 {
@@ -462,7 +257,12 @@
     margin-right: 15px;
   }
 
-  .content-section {
+  .activity-section,
+  .actions-section {
     padding: 20px;
+  }
+
+  .action-btn {
+    padding: 12px 16px;
   }
 }

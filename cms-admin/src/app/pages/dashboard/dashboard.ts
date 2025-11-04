@@ -12,7 +12,6 @@ import { AuthService } from '../../services/auth.service';
 export class Dashboard implements OnInit {
   user: any = null;
   currentDate = new Date();
-  sidebarCollapsed = false;
 
   // Dashboard stats (mock data for now)
   stats = {
@@ -40,15 +39,6 @@ export class Dashboard implements OnInit {
     this.authService.currentUser$.subscribe(user => {
       this.user = user;
     });
-  }
-
-  toggleSidebar(): void {
-    this.sidebarCollapsed = !this.sidebarCollapsed;
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 
   navigateTo(route: string): void {
