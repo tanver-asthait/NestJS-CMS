@@ -1,6 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../../users/schemas/user.schema';
+import { Category } from '../../categories/category.schema';
+import { Placement } from '../../placements/placement.schema';
 
 export type PostDocument = Post & Document;
 
@@ -8,6 +10,7 @@ export enum PostStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ARCHIVED = 'archived',
+  EXPIRED = 'expired'
 }
 
 @Schema({
@@ -24,7 +27,7 @@ export class Post {
   excerpt?: string;
 
   @Prop({ required: true })
-  content: string;
+  content?: string;
 
   @Prop({ 
     type: String, 
@@ -36,23 +39,26 @@ export class Post {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   author: Types.ObjectId | User;
 
+  @Prop({ type: Types.ObjectId, ref: 'Category', required: true })
+  category: Types.ObjectId | Category;
+
+  @Prop({ type: Types.ObjectId, ref: 'Placement', required: true })
+  placement: Types.ObjectId | Placement;
+
   @Prop({ type: [String], default: [] })
   tags: string[];
 
   @Prop()
-  featuredImage?: string;
-
-  @Prop()
-  metaTitle?: string;
-
-  @Prop()
-  metaDescription?: string;
+  image?: string;
 
   @Prop({ default: 0 })
   viewCount: number;
 
   @Prop()
   publishedAt?: Date;
+
+  @Prop()
+  expiredAt?: Date;
 }
 
 export const PostSchema = SchemaFactory.createForClass(Post);

@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsOptional, IsNumber, IsDate } from 'class-validator';
+import { IsOptional, IsNumber, IsDateString } from 'class-validator';
 import { CreatePostDto } from './create-post.dto';
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {
@@ -7,7 +7,11 @@ export class UpdatePostDto extends PartialType(CreatePostDto) {
   @IsOptional()
   viewCount?: number;
 
-  @IsDate()
+  @IsDateString()
   @IsOptional()
   publishedAt?: Date;
+
+  @IsDateString()
+  @IsOptional()
+  expiredAt?: Date;
 }

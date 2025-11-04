@@ -15,6 +15,7 @@ import { PostsService, PostQueryParams } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { PostStatus } from './schemas/post.schema';
 
 @Controller('posts')
@@ -24,8 +25,17 @@ export class PostsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  create(@Body() createPostDto: CreatePostDto) {
-    return this.postsService.create(createPostDto);
+  create(@Body() createPostDto: CreatePostDto, @CurrentUser() user: any) {
+    console.log('JWT User object:', JSON.stringify(user, null, 2)); // Debug log
+    
+    const authorId = user?.userId || user?.sub || user?.id || user?._id;
+    console.log('Extracted authorId:', authorId); // Debug log
+    
+    if (!authorId) {
+      throw new Error('Could not extract user ID from JWT token. User object: ' + JSON.stringify(user));
+    }
+    
+    return this.postsService.create(createPostDto, authorId);
   }
 
   @Get()
@@ -106,8 +116,8 @@ export class PostsController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
-    return this.postsService.update(id, updatePostDto);
+  update(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto, @CurrentUser() user: any) {
+    return this.postsService.update(id, updatePostDto, user.userId);
   }
 
   @Patch(':id/view')

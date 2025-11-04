@@ -9,6 +9,7 @@ export class CategoriesController {
   @Post()
   @UseGuards(JwtAuthGuard)
   create(@Body() createCategoryDto: any) {
+    console.log('Creating category with data:', createCategoryDto);
     return this.categoriesService.create(createCategoryDto);
   }
 

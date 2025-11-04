@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsArray, IsUrl, IsMongoId } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsArray, IsUrl, IsMongoId, IsDateString } from 'class-validator';
 import { PostStatus } from '../schemas/post.schema';
 
 export class CreatePostDto {
@@ -15,8 +15,8 @@ export class CreatePostDto {
   excerpt?: string;
 
   @IsString()
-  @IsNotEmpty()
-  content: string;
+  @IsOptional()
+  content?: string;
 
   @IsEnum(PostStatus)
   @IsOptional()
@@ -24,7 +24,11 @@ export class CreatePostDto {
 
   @IsMongoId()
   @IsNotEmpty()
-  author: string;
+  category: string;
+
+  @IsMongoId()
+  @IsNotEmpty()
+  placement: string;
 
   @IsArray()
   @IsString({ each: true })
@@ -33,13 +37,13 @@ export class CreatePostDto {
 
   @IsUrl()
   @IsOptional()
-  featuredImage?: string;
+  image?: string;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
-  metaTitle?: string;
+  publishedAt?: Date;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
-  metaDescription?: string;
+  expiredAt?: Date;
 }

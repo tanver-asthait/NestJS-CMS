@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
 import { CategoriesModule } from './categories/categories.module';
+import { PlacementsModule } from './placements/placements.module';
 import { databaseConfig } from './config/database.config';
 import { AuthModule } from './auth/auth.module';
 
@@ -19,6 +20,7 @@ import { AuthModule } from './auth/auth.module';
     UsersModule,
     PostsModule,
     CategoriesModule,
+    PlacementsModule,
     AuthModule,
   ],
   controllers: [AppController],

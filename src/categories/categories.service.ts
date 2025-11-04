@@ -23,4 +23,16 @@ export class CategoriesService {
     }
     return category;
   }
+
+  async incrementPostCount(id: string): Promise<void> {
+    await this.categoryModel
+      .findByIdAndUpdate(id, { $inc: { postCount: 1 } })
+      .exec();
+  }
+
+  async decrementPostCount(id: string): Promise<void> {
+    await this.categoryModel
+      .findByIdAndUpdate(id, { $inc: { postCount: -1 } })
+      .exec();
+  }
 }

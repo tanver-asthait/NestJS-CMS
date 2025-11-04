@@ -4,6 +4,8 @@ import { Model } from 'mongoose';
 import { Post, PostDocument, PostStatus } from './schemas/post.schema';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { CategoriesService } from '../categories/categories.service';
+import { PlacementsService } from '../placements/placements.service';
 
 export interface PostsResponse {
   posts: Post[];
@@ -24,23 +26,47 @@ export interface PostQueryParams {
 
 @Injectable()
 export class PostsService {
-  constructor(@InjectModel(Post.name) private postModel: Model<PostDocument>) {}
+  constructor(
+    @InjectModel(Post.name) private postModel: Model<PostDocument>,
+    private categoriesService: CategoriesService,
+    private placementsService: PlacementsService,
+  ) {}
 
-  async create(createPostDto: CreatePostDto): Promise<Post> {
+  async create(createPostDto: CreatePostDto, authorId: string): Promise<Post> {
+    console.log('Creating post with authorId:', authorId); // Debug log
+    console.log('CreatePostDto:', createPostDto); // Debug log
+    
+    if (!authorId) {
+      throw new ConflictException('Author ID is required');
+    }
+
     // Check if slug already exists
     const existingPost = await this.postModel.findOne({ slug: createPostDto.slug });
     if (existingPost) {
       throw new ConflictException('Post with this slug already exists');
     }
 
-    const createdPost = new this.postModel(createPostDto);
+    const createdPost = new this.postModel({
+      ...createPostDto,
+      author: authorId,
+    });
+    
+    console.log('Post object before save:', createdPost); // Debug log
     
     // Set publishedAt if status is published
     if (createPostDto.status === PostStatus.PUBLISHED) {
       createdPost.publishedAt = new Date();
     }
 
-    return createdPost.save();
+    const savedPost = await createdPost.save();
+
+    // Increment post counts for category and placement
+    await Promise.all([
+      this.categoriesService.incrementPostCount(createPostDto.category),
+      this.placementsService.incrementPostCount(createPostDto.placement),
+    ]);
+
+    return savedPost;
   }
 
   async findAll(queryParams: PostQueryParams = {}): Promise<PostsResponse> {
@@ -82,6 +108,8 @@ export class PostsService {
       this.postModel
         .find(filter)
         .populate('author', 'firstName lastName email')
+        .populate('category', 'name slug color')
+        .populate('placement', 'name slug subCategory color')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -104,6 +132,8 @@ export class PostsService {
     return this.postModel
       .find({ status: PostStatus.PUBLISHED })
       .populate('author', 'firstName lastName email')
+      .populate('category', 'name slug color')
+      .populate('placement', 'name slug subCategory color')
       .sort({ publishedAt: -1 })
       .exec();
   }
@@ -112,6 +142,8 @@ export class PostsService {
     const post = await this.postModel
       .findById(id)
       .populate('author', 'firstName lastName email')
+      .populate('category', 'name slug color')
+      .populate('placement', 'name slug subCategory color')
       .exec();
     
     if (!post) {
@@ -124,6 +156,8 @@ export class PostsService {
     const post = await this.postModel
       .findOne({ slug })
       .populate('author', 'firstName lastName email')
+      .populate('category', 'name slug color')
+      .populate('placement', 'name slug subCategory color')
       .exec();
     
     if (!post) {
@@ -132,7 +166,18 @@ export class PostsService {
     return post;
   }
 
-  async update(id: string, updatePostDto: UpdatePostDto): Promise<Post> {
+  async update(id: string, updatePostDto: UpdatePostDto, currentUserId?: string): Promise<Post> {
+    // Get the existing post first to compare category/placement changes
+    const existingPost = await this.postModel.findById(id).exec();
+    if (!existingPost) {
+      throw new NotFoundException(`Post with ID ${id} not found`);
+    }
+
+    // Optional: Check if user can edit this post (owner or admin)
+    // if (currentUserId && existingPost.author.toString() !== currentUserId) {
+    //   throw new ForbiddenException('You can only edit your own posts');
+    // }
+
     // If status is being changed to published and publishedAt is not set
     if (updatePostDto.status === PostStatus.PUBLISHED && !updatePostDto.publishedAt) {
       updatePostDto.publishedAt = new Date();
@@ -141,26 +186,61 @@ export class PostsService {
     const updatedPost = await this.postModel
       .findByIdAndUpdate(id, updatePostDto, { new: true })
       .populate('author', 'firstName lastName email')
+      .populate('category', 'name slug color')
+      .populate('placement', 'name slug subCategory color')
       .exec();
 
     if (!updatedPost) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
 
+    // Handle category/placement count updates if they changed
+    const promises: Promise<void>[] = [];
+    
+    if (updatePostDto.category && updatePostDto.category !== existingPost.category.toString()) {
+      promises.push(
+        this.categoriesService.decrementPostCount(existingPost.category.toString()),
+        this.categoriesService.incrementPostCount(updatePostDto.category)
+      );
+    }
+    
+    if (updatePostDto.placement && updatePostDto.placement !== existingPost.placement.toString()) {
+      promises.push(
+        this.placementsService.decrementPostCount(existingPost.placement.toString()),
+        this.placementsService.incrementPostCount(updatePostDto.placement)
+      );
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+
     return updatedPost;
   }
 
   async remove(id: string): Promise<void> {
-    const result = await this.postModel.findByIdAndDelete(id).exec();
-    if (!result) {
+    // First get the post to get category and placement IDs
+    const post = await this.postModel.findById(id).exec();
+    if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
+
+    // Delete the post
+    await this.postModel.findByIdAndDelete(id).exec();
+
+    // Decrement post counts for category and placement
+    await Promise.all([
+      this.categoriesService.decrementPostCount(post.category.toString()),
+      this.placementsService.decrementPostCount(post.placement.toString()),
+    ]);
   }
 
   async incrementViewCount(id: string): Promise<Post> {
     const updatedPost = await this.postModel
       .findByIdAndUpdate(id, { $inc: { viewCount: 1 } }, { new: true })
       .populate('author', 'firstName lastName email')
+      .populate('category', 'name slug color')
+      .populate('placement', 'name slug subCategory color')
       .exec();
 
     if (!updatedPost) {
@@ -204,6 +284,8 @@ export class PostsService {
       this.postModel
         .find(filter)
         .populate('author', 'firstName lastName email')
+        .populate('category', 'name slug color')
+        .populate('placement', 'name slug subCategory color')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -256,6 +338,8 @@ export class PostsService {
       this.postModel
         .find(filter)
         .populate('author', 'firstName lastName email')
+        .populate('category', 'name slug color')
+        .populate('placement', 'name slug subCategory color')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
