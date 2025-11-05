@@ -26,10 +26,9 @@ export class Placement {
 
   @Prop({ 
     type: String, 
-    enum: SubCategory, 
-    required: true 
+    enum: SubCategory
   })
-  subCategory: SubCategory;
+  subCategory?: SubCategory;
 
   @Prop()
   description?: string;

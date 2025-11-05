@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
@@ -14,55 +14,110 @@ import { User, UserRole } from '../../models/user.model';
   styleUrl: './categories.scss',
 })
 export class CategoriesComponent implements OnInit {
-  categories: Category[] = [];
-  loading = false;
-  error = '';
+  // Injected services
+  private categoriesService = inject(Categories);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+
+  // Signals for reactive state
+  categories = signal<Category[]>([]);
+  loading = signal(false);
+  error = signal('');
   
-  // Pagination
-  currentPage = 1;
-  totalPages = 1;
-  totalCategories = 0;
-  pageSize = 10;
+  // Pagination signals
+  currentPage = signal(1);
+  totalPages = signal(1);
+  totalCategories = signal(0);
+  pageSize = signal(10);
   
-  // Filters
+  // Current user signal
+  currentUser = signal<User | null>(null);
+  
+  // Form signal
   filterForm: FormGroup;
-  
-  // Current user
-  currentUser: User | null = null;
   
   // Enums for template
   UserRole = UserRole;
 
-  constructor(
-    private categoriesService: Categories,
-    private authService: AuthService,
-    private router: Router,
-    private fb: FormBuilder
-  ) {
+  // Computed values
+  canCreateCategory = computed(() => {
+    const user = this.currentUser();
+    if (!user) return false;
+    return [UserRole.ADMIN, UserRole.EDITOR].includes(user.role);
+  });
+
+  canEditCategory = computed(() => {
+    const user = this.currentUser();
+    if (!user) return false;
+    return [UserRole.ADMIN, UserRole.EDITOR].includes(user.role);
+  });
+
+  canDeleteCategory = computed(() => {
+    const user = this.currentUser();
+    if (!user) return false;
+    return user.role === UserRole.ADMIN;
+  });
+
+  maxPage = computed(() => {
+    return Math.min(this.currentPage() * this.pageSize(), this.totalCategories());
+  });
+
+  paginationNumbers = computed(() => {
+    const delta = 2;
+    const range: number[] = [];
+    const rangeWithDots: number[] = [];
+    const currentPage = this.currentPage();
+    const totalPages = this.totalPages();
+
+    for (let i = Math.max(2, currentPage - delta); 
+         i <= Math.min(totalPages - 1, currentPage + delta); 
+         i++) {
+      range.push(i);
+    }
+
+    if (currentPage - delta > 2) {
+      rangeWithDots.push(1, -1);
+    } else {
+      rangeWithDots.push(1);
+    }
+
+    rangeWithDots.push(...range);
+
+    if (currentPage + delta < totalPages - 1) {
+      rangeWithDots.push(-1, totalPages);
+    } else {
+      rangeWithDots.push(totalPages);
+    }
+
+    return rangeWithDots;
+  });
+
+  constructor() {
     this.filterForm = this.fb.group({
       search: ['']
     });
   }
 
   ngOnInit(): void {
-    this.currentUser = this.authService.getCurrentUser();
+    this.currentUser.set(this.authService.getCurrentUser());
     this.loadCategories();
     
     // Subscribe to filter changes
     this.filterForm.valueChanges.subscribe(() => {
-      this.currentPage = 1;
+      this.currentPage.set(1);
       this.loadCategories();
     });
   }
 
   loadCategories(): void {
-    this.loading = true;
-    this.error = '';
+    this.loading.set(true);
+    this.error.set('');
 
     const filters = this.filterForm.value;
     const params: CategoryQueryParams = {
-      page: this.currentPage,
-      limit: this.pageSize
+      page: this.currentPage(),
+      limit: this.pageSize()
     };
 
     if (filters.search?.trim()) {
@@ -71,23 +126,23 @@ export class CategoriesComponent implements OnInit {
 
     this.categoriesService.getCategories(params).subscribe({
       next: (response) => {
-        this.categories = response.categories;
-        this.currentPage = response.page;
-        this.totalPages = response.totalPages;
-        this.totalCategories = response.total;
-        this.loading = false;
+        this.categories.set(response);
+        // this.currentPage.set(response.page);
+        // this.totalPages.set(response.totalPages);
+        // this.totalCategories.set(response.total);
+        this.loading.set(false);
       },
       error: (error) => {
         console.error('Error loading categories:', error);
-        this.error = 'Failed to load categories. Please try again.';
-        this.loading = false;
+        this.error.set('Failed to load categories. Please try again.');
+        this.loading.set(false);
       }
     });
   }
 
   onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
       this.loadCategories();
     }
   }
@@ -121,29 +176,8 @@ export class CategoriesComponent implements OnInit {
 
   clearFilters(): void {
     this.filterForm.reset();
-    this.currentPage = 1;
+    this.currentPage.set(1);
     this.loadCategories();
-  }
-
-  canEditCategory(): boolean {
-    if (!this.currentUser) return false;
-    
-    // Admin and Editor can edit categories
-    return [UserRole.ADMIN, UserRole.EDITOR].includes(this.currentUser.role);
-  }
-
-  canDeleteCategory(): boolean {
-    if (!this.currentUser) return false;
-    
-    // Only Admin can delete categories
-    return this.currentUser.role === UserRole.ADMIN;
-  }
-
-  canCreateCategory(): boolean {
-    if (!this.currentUser) return false;
-    
-    // Admin and Editor can create categories
-    return [UserRole.ADMIN, UserRole.EDITOR].includes(this.currentUser.role);
   }
 
   formatDate(date: Date | string): string {
@@ -152,37 +186,5 @@ export class CategoriesComponent implements OnInit {
       month: 'short',
       day: 'numeric'
     });
-  }
-
-  getMaxPage(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalCategories);
-  }
-
-  getPaginationNumbers(): number[] {
-    const delta = 2;
-    const range: number[] = [];
-    const rangeWithDots: number[] = [];
-
-    for (let i = Math.max(2, this.currentPage - delta); 
-         i <= Math.min(this.totalPages - 1, this.currentPage + delta); 
-         i++) {
-      range.push(i);
-    }
-
-    if (this.currentPage - delta > 2) {
-      rangeWithDots.push(1, -1);
-    } else {
-      rangeWithDots.push(1);
-    }
-
-    rangeWithDots.push(...range);
-
-    if (this.currentPage + delta < this.totalPages - 1) {
-      rangeWithDots.push(-1, this.totalPages);
-    } else {
-      rangeWithDots.push(this.totalPages);
-    }
-
-    return rangeWithDots;
   }
 }

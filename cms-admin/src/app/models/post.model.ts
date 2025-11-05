@@ -6,8 +6,10 @@ export interface Post {
   content: string;
   status: PostStatus;
   author: string | User;
+  category: string | Category;
+  placement: string | Placement;
   tags?: string[];
-  featuredImage?: string;
+  image?: string;
   metaTitle?: string;
   metaDescription?: string;
   viewCount: number;
@@ -27,9 +29,10 @@ export interface CreatePostDto {
   excerpt?: string;
   content: string;
   status?: PostStatus;
-  author: string;
+  category: string;
+  placement: string;
   tags?: string[];
-  featuredImage?: string;
+  image?: string;
   metaTitle?: string;
   metaDescription?: string;
 }
@@ -41,10 +44,12 @@ export interface UpdatePostDto {
   content?: string;
   status?: PostStatus;
   tags?: string[];
-  featuredImage?: string;
+  image?: string;
   metaTitle?: string;
   metaDescription?: string;
 }
 
 // Import User interface
 import { User } from './user.model';
+import { Category } from './category.model';
+import { Placement } from './placement.model';

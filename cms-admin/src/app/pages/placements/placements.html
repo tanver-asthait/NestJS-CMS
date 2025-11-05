@@ -1,0 +1,164 @@
+<div class="placements-page">
+  <div class="page-header">
+    <div class="header-left">
+      <h1>Placements Management</h1>
+      <p class="page-description">Manage content placements and their subcategories</p>
+    </div>
+    <div class="header-right">
+      @if (canCreatePlacement()) {
+        <button 
+          type="button" 
+          class="btn btn-primary"
+          (click)="onCreatePlacement()"
+        >
+          <i class="fas fa-plus"></i>
+          Create Placement
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section">
+    <form [formGroup]="filterForm" class="filters-form">
+      <div class="filter-group">
+        <label for="subCategory">Subcategory</label>
+        <select id="subCategory" formControlName="subCategory" class="form-control">
+          <option value="">All Subcategories</option>
+          @for (option of getSubCategoryOptions(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <label for="status">Status</label>
+        <select id="status" formControlName="status" class="form-control">
+          <option value="all">All</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button 
+          type="button" 
+          class="btn btn-secondary"
+          (click)="onClearFilters()"
+        >
+          Clear Filters
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading placements...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error && !loading) {
+    <div class="error-state">
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>{{ error }}</p>
+        <button class="btn btn-primary" (click)="loadPlacements()">
+          Try Again
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Placements List -->
+  @if (!loading && !error) {
+    <div class="placements-list">
+      @if (placements().length === 0) {
+        <div class="empty-state">
+          <i class="fas fa-folder-open"></i>
+          <h3>No placements found</h3>
+          <p>No placements match your current filters.</p>
+          @if (canCreatePlacement()) {
+            <button 
+              class="btn btn-primary" 
+              (click)="onCreatePlacement()"
+            >
+              Create First Placement
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="placements-grid">
+          @for (placement of placements(); track placement._id) {
+            <div class="placement-card">
+              <div class="placement-header">
+                <div class="placement-info">
+                  <h3 class="placement-name">{{ placement.name }}</h3>
+                  <span class="placement-subcategory">
+                    {{ getSubCategoryDisplayName(placement.subCategory) }}
+                  </span>
+                </div>
+                <div class="placement-status">
+                  @if (placement.isActive !== false) {
+                    <span class="status-badge active">Active</span>
+                  } @else {
+                    <span class="status-badge inactive">Inactive</span>
+                  }
+                </div>
+              </div>
+
+              @if (placement.description) {
+                <div class="placement-description">
+                  <p>{{ placement.description }}</p>
+                </div>
+              }
+
+              <div class="placement-meta">
+                <div class="meta-item">
+                  <i class="fas fa-layer-group"></i>
+                  <span>Sort Order: {{ placement.sortOrder || 0 }}</span>
+                </div>
+                <div class="meta-item">
+                  <i class="fas fa-file-alt"></i>
+                  <span>Posts: {{ placement.postCount || 0 }}</span>
+                </div>
+                @if (placement.createdAt) {
+                  <div class="meta-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>Created: {{ formatDate(placement.createdAt) }}</span>
+                  </div>
+                }
+              </div>
+
+              <div class="placement-actions">
+                @if (canEditPlacement()) {
+                  <button 
+                    class="btn btn-sm btn-outline-primary"
+                    (click)="onEditPlacement(placement)"
+                    title="Edit Placement"
+                  >
+                    <i class="fas fa-edit"></i>
+                    Edit
+                  </button>
+                }
+                @if (canDeletePlacement()) {
+                  <button 
+                    class="btn btn-sm btn-outline-danger"
+                    (click)="onDeletePlacement(placement)"
+                    title="Delete Placement"
+                  >
+                    <i class="fas fa-trash"></i>
+                    Delete
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

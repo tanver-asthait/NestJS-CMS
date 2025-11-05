@@ -4,10 +4,10 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } 
 import { Router, ActivatedRoute } from '@angular/router';
 import { Posts } from '../../../services/posts';
 import { Categories } from '../../../services/categories';
-import { Users } from '../../../services/users';
+import { Placements } from '../../../services/placements';
 import { Post, CreatePostDto, UpdatePostDto, PostStatus } from '../../../models/post.model';
 import { Category } from '../../../models/category.model';
-import { User, UserRole } from '../../../models/user.model';
+import { User } from '../../../models/user.model';
 import { AuthService } from '../../../services/auth.service';
 
 @Component({
@@ -33,21 +33,20 @@ export class PostFormComponent implements OnInit {
   // Options for dropdowns
   statusOptions: Array<{ value: PostStatus; label: string }> = [];
   categories: Category[] = [];
-  authors: User[] = [];
+  placements: Array<{ _id: string; name: string; slug?: string; subCategory?: string }> = [];
   
   // Tag management
   tagInput = '';
   
   // Enums for template
   PostStatus = PostStatus;
-  UserRole = UserRole;
 
   constructor(
     private fb: FormBuilder,
-    private postsService: Posts,
-    private categoriesService: Categories,
-    private usersService: Users,
-    private authService: AuthService,
+  private postsService: Posts,
+  private categoriesService: Categories,
+  private placementsService: Placements,
+  private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) {
@@ -57,9 +56,10 @@ export class PostFormComponent implements OnInit {
       excerpt: [''],
       content: ['', [Validators.required, Validators.minLength(10)]],
       status: [PostStatus.DRAFT, [Validators.required]],
-      author: ['', [Validators.required]],
+      category: ['', [Validators.required]],
+      placement: ['', [Validators.required]],
       tags: [[]],
-      featuredImage: [''],
+      image: [''],
       metaTitle: [''],
       metaDescription: ['']
     });
@@ -76,7 +76,7 @@ export class PostFormComponent implements OnInit {
         this.postId = params['id'];
         this.loadPost();
       } else {
-        this.setDefaultAuthor();
+        // nothing to set for author from frontend; backend uses token
       }
     });
     
@@ -92,7 +92,7 @@ export class PostFormComponent implements OnInit {
   initializeFormOptions(): void {
     this.statusOptions = this.postsService.getStatusOptions();
     this.loadCategories();
-    this.loadAuthors();
+    this.loadPlacements();
   }
 
   loadCategories(): void {
@@ -106,24 +106,15 @@ export class PostFormComponent implements OnInit {
     });
   }
 
-  loadAuthors(): void {
-    // Load users who can be authors (Admin, Editor, Author)
-    this.usersService.getUsers({ limit: 100 }).subscribe({
-      next: (response) => {
-        this.authors = response.users.filter(user => 
-          [UserRole.ADMIN, UserRole.EDITOR, UserRole.AUTHOR].includes(user.role)
-        );
+  loadPlacements(): void {
+    this.placementsService.getAllPlacements().subscribe({
+      next: (placements: any) => {
+        this.placements = placements;
       },
-      error: (error) => {
-        console.error('Error loading authors:', error);
+      error: (error: any) => {
+        console.error('Error loading placements:', error);
       }
     });
-  }
-
-  setDefaultAuthor(): void {
-    if (this.currentUser && [UserRole.ADMIN, UserRole.EDITOR, UserRole.AUTHOR].includes(this.currentUser.role)) {
-      this.postForm.patchValue({ author: this.currentUser._id });
-    }
   }
 
   loadPost(): void {
@@ -144,17 +135,19 @@ export class PostFormComponent implements OnInit {
   }
 
   populateForm(post: Post): void {
-    const authorId = typeof post.author === 'string' ? post.author : post.author._id;
-    
+    const categoryId = typeof post.category === 'string' ? post.category : (post.category as any)?._id;
+    const placementId = typeof post.placement === 'string' ? post.placement : (post.placement as any)?._id;
+
     this.postForm.patchValue({
       title: post.title,
       slug: post.slug,
       excerpt: post.excerpt || '',
       content: post.content,
       status: post.status,
-      author: authorId,
+      category: categoryId || '',
+      placement: placementId || '',
       tags: post.tags || [],
-      featuredImage: post.featuredImage || '',
+      image: (post as any).image || '',
       metaTitle: post.metaTitle || '',
       metaDescription: post.metaDescription || ''
     });
@@ -283,21 +276,11 @@ export class PostFormComponent implements OnInit {
       title: 'Title',
       slug: 'Slug',
       content: 'Content',
-      author: 'Author',
-      status: 'Status'
+      status: 'Status',
+      category: 'Category',
+      placement: 'Placement'
     };
     return labels[fieldName] || fieldName;
-  }
-
-  canEditAuthor(): boolean {
-    if (!this.currentUser) return false;
-    // Only Admin and Editor can change the author
-    return [UserRole.ADMIN, UserRole.EDITOR].includes(this.currentUser.role);
-  }
-
-  getAuthorName(authorId: string): string {
-    const author = this.authors.find(a => a._id === authorId);
-    return author ? `${author.firstName} ${author.lastName}` : 'Unknown Author';
   }
 
   // Getter methods for template
@@ -306,8 +289,9 @@ export class PostFormComponent implements OnInit {
   get excerpt() { return this.postForm.get('excerpt'); }
   get content() { return this.postForm.get('content'); }
   get status() { return this.postForm.get('status'); }
-  get author() { return this.postForm.get('author'); }
-  get featuredImage() { return this.postForm.get('featuredImage'); }
+  get category() { return this.postForm.get('category'); }
+  get placement() { return this.postForm.get('placement'); }
+  get image() { return this.postForm.get('image'); }
   get metaTitle() { return this.postForm.get('metaTitle'); }
   get metaDescription() { return this.postForm.get('metaDescription'); }
 }

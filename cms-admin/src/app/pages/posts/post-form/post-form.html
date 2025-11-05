@@ -120,30 +120,46 @@
           </div>
 
           <div class="form-group half-width">
-            <label for="author">Author *</label>
+            <label for="category">Category *</label>
             <select
-              id="author"
-              formControlName="author"
+              id="category"
+              formControlName="category"
               class="form-control"
-              [class.is-invalid]="author?.invalid && author?.touched"
-              [disabled]="!canEditAuthor()"
+              [class.is-invalid]="category?.invalid && category?.touched"
             >
-              <option value="">Select an author</option>
-              <option *ngFor="let authorOption of authors" [value]="authorOption._id">
-                {{ getAuthorName(authorOption._id) }} ({{ authorOption.role }})
+              <option value="">Select a category</option>
+              <option *ngFor="let cat of categories" [value]="cat._id">
+                {{ cat.name }}
               </option>
             </select>
-            <small *ngIf="!canEditAuthor()" class="form-text">Only admins and editors can change the author</small>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="placement">Placement *</label>
+            <select
+              id="placement"
+              formControlName="placement"
+              class="form-control"
+              [class.is-invalid]="placement?.invalid && placement?.touched"
+            >
+              <option value="">Select a placement</option>
+              <option *ngFor="let place of placements" [value]="place._id">
+                {{ place.name }} ({{ place.subCategory }})
+              </option>
+            </select>
+            <small class="form-text">Where this post will be displayed on the site</small>
           </div>
         </div>
 
         <div class="form-row">
           <div class="form-group">
-            <label for="featuredImage">Featured Image URL</label>
+            <label for="image">Image URL</label>
             <input
               type="url"
-              id="featuredImage"
-              formControlName="featuredImage"
+              id="image"
+              formControlName="image"
               class="form-control"
               placeholder="https://example.com/image.jpg"
             >

@@ -7,6 +7,7 @@ import { PostsComponent } from './pages/posts/posts';
 import { PostFormComponent } from './pages/posts/post-form/post-form';
 import { CategoriesComponent } from './pages/categories/categories';
 import { CategoryForm } from './pages/categories/category-form/category-form';
+import { PlacementsComponent } from './pages/placements/placements';
 import { UsersComponent } from './pages/users/users';
 import { AuthGuard } from './guards/auth.guard';
 
@@ -29,6 +30,7 @@ export const routes: Routes = [
       { path: 'categories', component: CategoriesComponent },
       { path: 'categories/create', component: CategoryForm },
       { path: 'categories/edit/:id', component: CategoryForm },
+      { path: 'placements', component: PlacementsComponent },
       { path: 'users', component: UsersComponent },
     ]
   },

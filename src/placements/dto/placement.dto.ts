@@ -10,10 +10,6 @@ export class CreatePlacementDto {
   @IsString()
   slug: string;
 
-  @IsNotEmpty()
-  @IsEnum(SubCategory)
-  subCategory: SubCategory;
-
   @IsOptional()
   @IsString()
   description?: string;

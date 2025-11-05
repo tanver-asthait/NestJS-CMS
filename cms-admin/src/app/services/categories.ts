@@ -27,14 +27,14 @@ export class Categories {
   constructor(private http: HttpClient) {}
 
   // Get all categories with pagination and filters
-  getCategories(params: CategoryQueryParams = {}): Observable<CategoriesResponse> {
+  getCategories(params: CategoryQueryParams = {}): Observable<Category[]> {
     let httpParams = new HttpParams();
     
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.search) httpParams = httpParams.set('search', params.search);
 
-    return this.http.get<CategoriesResponse>(this.apiUrl, { params: httpParams });
+    return this.http.get<Category[]>(this.apiUrl, { params: httpParams });
   }
 
   // Get all categories without pagination (for dropdowns)

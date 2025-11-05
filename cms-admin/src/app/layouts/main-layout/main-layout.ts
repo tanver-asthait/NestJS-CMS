@@ -21,6 +21,7 @@ export class MainLayout {
     { label: 'Dashboard', link: '/dashboard', icon: 'bi bi-speedometer2' },
     { label: 'Posts', link: '/posts', icon: 'bi bi-file-earmark-text' },
     { label: 'Categories', link: '/categories', icon: 'bi bi-tags' },
+    { label: 'Placements', link: '/placements', icon: 'bi bi-layout-text-window-reverse' },
     { label: 'Users', link: '/users', icon: 'bi bi-people' },
     { label: 'Media', link: '/media', icon: 'bi bi-image' },
     { label: 'Settings', link: '/settings', icon: 'bi bi-gear' },
