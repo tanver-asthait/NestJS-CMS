@@ -3,6 +3,9 @@ export interface Category {
   name: string;
   slug: string;
   description?: string;
+  color?: string;
+  isActive: boolean;
+  postCount?: number;
   createdAt: Date;
   updatedAt: Date;
 }

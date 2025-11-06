@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
@@ -6,6 +6,8 @@ import { Placements } from '../../services/placements';
 import { Placement, SubCategory } from '../../models/placement.model';
 import { AuthService } from '../../services/auth.service';
 import { User, UserRole } from '../../models/user.model';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-placements',
@@ -14,75 +16,59 @@ import { User, UserRole } from '../../models/user.model';
   styleUrl: './placements.scss',
 })
 export class PlacementsComponent implements OnInit {
-  placements = signal<Placement[]>([]);
-  loading = false;
+  placementsService = inject(Placements);
+  authService = inject(AuthService);
+  router = inject(Router);
+
+  loading = signal(true);
+  isTriggerSource = signal(false);
   error = '';
-  
-  // Filters
+
+  placements = toSignal(
+    toObservable(this.isTriggerSource)
+    .pipe(
+      switchMap(() => this.placementsService.getAllPlacements()),
+      tap(() => this.loading.set(false))
+    ), {
+      initialValue: []
+    }
+  );
+
   filterForm: FormGroup;
-  
-  // Current user
   currentUser: User | null = null;
-  
-  // Enums for template
+
   UserRole = UserRole;
   SubCategory = SubCategory;
 
-  constructor(
-    private placementsService: Placements,
-    private authService: AuthService,
-    private router: Router,
-    private fb: FormBuilder
-  ) {
+  constructor(private fb: FormBuilder) {
     this.filterForm = this.fb.group({
       subCategory: [''],
-      status: ['all'] // all, active, inactive
+      status: ['all'], // all, active, inactive
     });
   }
 
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
-    this.loadPlacements();
-    
+
     // Watch filter changes
     this.filterForm.valueChanges.subscribe(() => {
-      this.loadPlacements();
-    });
-  }
-
-  loadPlacements(): void {
-    this.loading = true;
-    this.error = '';
-    
-    const filterValues = this.filterForm.value;
-    
-    this.placementsService.getAllPlacements().subscribe({
-      next: (placements) => {
-        this.placements.set(placements);
-        console.log('Loaded placements:', placements);
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading placements:', error);
-        this.error = 'Failed to load placements. Please try again.';
-        this.loading = false;
-      }
+      this.isTriggerSource.set(true);
     });
   }
 
   filterPlacements(placements: Placement[], filters: any): Placement[] {
     let filtered = [...placements];
-    
+
     if (filters.subCategory) {
-      filtered = filtered.filter(p => p.subCategory === filters.subCategory);
+      filtered = filtered.filter((p) => p.subCategory === filters.subCategory);
     }
-    
+
     if (filters.status === 'active') {
-      filtered = filtered.filter(p => p.isActive !== false);
+      filtered = filtered.filter((p) => p.isActive !== false);
     } else if (filters.status === 'inactive') {
-      filtered = filtered.filter(p => p.isActive === false);
+      filtered = filtered.filter((p) => p.isActive === false);
     }
-    
+
     return filtered.sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0));
   }
 
@@ -95,15 +81,19 @@ export class PlacementsComponent implements OnInit {
   }
 
   onDeletePlacement(placement: Placement): void {
-    if (confirm(`Are you sure you want to delete the placement "${placement.name}"?`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete the placement "${placement.name}"?`,
+      )
+    ) {
       this.placementsService.deletePlacement(placement._id).subscribe({
         next: () => {
-          this.loadPlacements(); // Reload the list
+          this.isTriggerSource.set(true);
         },
         error: (error) => {
           console.error('Error deleting placement:', error);
           alert('Failed to delete placement. Please try again.');
-        }
+        },
       });
     }
   }
@@ -111,7 +101,7 @@ export class PlacementsComponent implements OnInit {
   onClearFilters(): void {
     this.filterForm.reset({
       subCategory: '',
-      status: 'all'
+      status: 'all',
     });
   }
 
@@ -134,28 +124,28 @@ export class PlacementsComponent implements OnInit {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
     });
   }
 
   getSubCategoryDisplayName(subCategory: string): string {
     const names: { [key: string]: string } = {
-      'topnav': 'Top Navigation',
-      'rightsidebar': 'Right Sidebar',
-      'leftsidebar': 'Left Sidebar',
-      'bottom': 'Bottom Section',
-      'featured': 'Featured Content',
-      'sidebar': 'Sidebar',
-      'header': 'Header Banner',
-      'footer': 'Footer Area'
+      topnav: 'Top Navigation',
+      rightsidebar: 'Right Sidebar',
+      leftsidebar: 'Left Sidebar',
+      bottom: 'Bottom Section',
+      featured: 'Featured Content',
+      sidebar: 'Sidebar',
+      header: 'Header Banner',
+      footer: 'Footer Area',
     };
     return names[subCategory] || subCategory;
   }
 
   getSubCategoryOptions(): { value: string; label: string }[] {
-    return Object.values(SubCategory).map(value => ({
+    return Object.values(SubCategory).map((value) => ({
       value,
-      label: this.getSubCategoryDisplayName(value)
+      label: this.getSubCategoryDisplayName(value),
     }));
   }
 }

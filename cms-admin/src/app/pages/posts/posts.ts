@@ -1,20 +1,27 @@
-import { Component, OnInit, signal, Signal } from '@angular/core';
-import { CommonModule, JsonPipe } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { Posts, PostQueryParams } from '../../services/posts';
+import { Categories } from '../../services/categories';
+import { Placements } from '../../services/placements';
 import { Post, PostStatus } from '../../models/post.model';
+import { Category } from '../../models/category.model';
+import { Placement } from '../../models/placement.model';
 import { AuthService } from '../../services/auth.service';
 import { User, UserRole } from '../../models/user.model';
 
 @Component({
   selector: 'app-posts',
-  imports: [JsonPipe, CommonModule, RouterModule, ReactiveFormsModule],
+  imports: [
+    CommonModule, RouterModule, ReactiveFormsModule],
   templateUrl: './posts.html',
   styleUrl: './posts.scss',
 })
 export class PostsComponent implements OnInit {
   posts = signal<Post[]>([]);
+  categories = signal<Category[]>([]);
+  placements = signal<Placement[]>([]);
   loading = false;
   error = '';
   
@@ -37,6 +44,8 @@ export class PostsComponent implements OnInit {
 
   constructor(
     private postsService: Posts,
+    private categoriesService: Categories,
+    private placementsService: Placements,
     private authService: AuthService,
     private router: Router,
     private fb: FormBuilder
@@ -51,6 +60,8 @@ export class PostsComponent implements OnInit {
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
     this.initializeStatusOptions();
+    this.loadCategories();
+    this.loadPlacements();
     this.loadPosts();
     
     // Subscribe to filter changes
@@ -67,6 +78,28 @@ export class PostsComponent implements OnInit {
       { value: PostStatus.PUBLISHED, label: 'Published' },
       { value: PostStatus.ARCHIVED, label: 'Archived' }
     ];
+  }
+
+  loadCategories(): void {
+    this.categoriesService.getAllCategories().subscribe({
+      next: (categories) => {
+        this.categories.set(categories);
+      },
+      error: (error) => {
+        console.error('Error loading categories:', error);
+      }
+    });
+  }
+
+  loadPlacements(): void {
+    this.placementsService.getAllPlacements().subscribe({
+      next: (placements) => {
+        this.placements.set(placements);
+      },
+      error: (error) => {
+        console.error('Error loading placements:', error);
+      }
+    });
   }
 
   loadPosts(): void {
@@ -148,11 +181,49 @@ export class PostsComponent implements OnInit {
     this.loadPosts();
   }
 
+  getCategoryName(categoryId: string | Category): string {
+    if (!categoryId) return 'No Category';
+    
+    if (typeof categoryId === 'object' && categoryId.name) {
+      return categoryId.name;
+    }
+    
+    const category = this.categories().find(cat => cat._id === categoryId);
+    return category ? category.name : 'Unknown Category';
+  }
+
+  getPlacementName(placementId: string | Placement): string {
+    if (!placementId) return 'No Placement';
+    
+    if (typeof placementId === 'object' && placementId.name) {
+      return placementId.name;
+    }
+    
+    const placement = this.placements().find(place => place._id === placementId);
+    return placement ? placement.name : 'Unknown Placement';
+  }
+
+  getExpiredDateClass(expiredAt: Date | string | undefined): string {
+    if (!expiredAt) return '';
+    
+    const expDate = new Date(expiredAt);
+    const now = new Date();
+    
+    if (expDate < now) {
+      return 'text-danger'; // Already expired
+    } else if (expDate.getTime() - now.getTime() < 7 * 24 * 60 * 60 * 1000) {
+      return 'text-warning'; // Expires within a week
+    }
+    
+    return 'text-success'; // More than a week left
+  }
+
   getStatusBadgeClass(status: PostStatus): string {
     const statusClasses = {
       [PostStatus.DRAFT]: 'badge-warning',
       [PostStatus.PUBLISHED]: 'badge-success',
-      [PostStatus.ARCHIVED]: 'badge-secondary'
+      [PostStatus.ARCHIVED]: 'badge-secondary',
+      [PostStatus.EXPIRED]: 'badge-danger'
     };
     return statusClasses[status] || 'badge-secondary';
   }

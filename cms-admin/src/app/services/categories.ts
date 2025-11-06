@@ -41,7 +41,7 @@ export class Categories {
 
   // Get all categories without pagination (for dropdowns)
   getAllCategories(): Observable<Category[]> {
-    return this.http.get<StandardResponse<Category[]>>(`${this.apiUrl}/all`)
+    return this.http.get<StandardResponse<Category[]>>(this.apiUrl)
       .pipe(map(response => response.data));
   }
 

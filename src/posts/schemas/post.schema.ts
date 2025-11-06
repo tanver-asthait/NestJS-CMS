@@ -57,7 +57,7 @@ export class Post {
   @Prop()
   publishedAt?: Date;
 
-  @Prop()
+  @Prop({ required: true })
   expiredAt?: Date;
 }
 

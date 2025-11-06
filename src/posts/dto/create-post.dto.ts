@@ -44,6 +44,6 @@ export class CreatePostDto {
   publishedAt?: Date;
 
   @IsDateString()
-  @IsOptional()
-  expiredAt?: Date;
+  @IsNotEmpty()
+  expiredAt: Date;
 }

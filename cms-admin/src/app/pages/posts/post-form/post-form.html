@@ -2,256 +2,267 @@
   <!-- Page Header -->
   <div class="page-header">
     <div class="header-content">
-      <h1>{{ isEditMode ? 'Edit Post' : 'Create New Post' }}</h1>
-      <p>{{ isEditMode ? 'Update post content and settings' : 'Create and publish a new blog post' }}</p>
+      <h1>{{ isEditMode() ? 'Edit Post' : 'Create New Post' }}</h1>
+      <p>{{ isEditMode() ? 'Update post content and settings' : 'Create and publish a new blog post' }}</p>
     </div>
   </div>
 
   <!-- Loading State -->
-  <div *ngIf="loading" class="loading-state">
-    <div class="spinner"></div>
-    <p>Loading post...</p>
-  </div>
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading post...</p>
+    </div>
+  }
 
   <!-- Form -->
-  <div *ngIf="!loading" class="form-container">
-    <form [formGroup]="postForm" (ngSubmit)="onSubmit()" class="post-form">
-      
-      <!-- Alert Messages -->
-      <div *ngIf="error" class="alert alert-danger" role="alert">
-        <i class="fas fa-exclamation-circle"></i>
-        {{ error }}
-      </div>
-
-      <div *ngIf="success" class="alert alert-success" role="alert">
-        <i class="fas fa-check-circle"></i>
-        {{ success }}
-      </div>
-
-      <!-- Main Content Section -->
-      <div class="form-section">
-        <h3>Post Content</h3>
+  @if (!loading()) {
+    <div class="form-container">
+      <form [formGroup]="postForm" (ngSubmit)="onSubmit()" class="post-form">
         
-        <div class="form-row">
-          <div class="form-group">
-            <label for="title">Title *</label>
-            <input
-              type="text"
-              id="title"
-              formControlName="title"
-              class="form-control"
-              [class.is-invalid]="title?.invalid && title?.touched"
-              placeholder="Enter post title..."
-            >
-            <div *ngIf="hasError('title', 'required')" class="invalid-feedback">
-              {{ getFieldError('title') }}
+        <!-- Alert Messages -->
+        @if (error()) {
+          <div class="alert alert-danger" role="alert">
+            <i class="fas fa-exclamation-circle"></i>
+            {{ error() }}
+          </div>
+        }
+
+        @if (success()) {
+          <div class="alert alert-success" role="alert">
+            <i class="fas fa-check-circle"></i>
+            {{ success() }}
+          </div>
+        }
+
+        <!-- Main Content Section -->
+        <div class="form-section">
+          <h3>Post Content</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="title">Title *</label>
+              <input
+                type="text"
+                id="title"
+                formControlName="title"
+                class="form-control"
+                [class.is-invalid]="title?.invalid && title?.touched"
+                placeholder="Enter post title..."
+              >
+              @if (hasError('title', 'required')) {
+                <div class="invalid-feedback">
+                  {{ getFieldError('title') }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="slug">URL Slug *</label>
+              <input
+                type="text"
+                id="slug"
+                formControlName="slug"
+                class="form-control"
+                [class.is-invalid]="slug?.invalid && slug?.touched"
+                (blur)="onSlugChange()"
+                placeholder="url-friendly-slug"
+              >
+              <small class="form-text">URL-friendly version of the title (lowercase, hyphens only)</small>
+              @if (hasError('slug', 'required') || hasError('slug', 'pattern')) {
+                <div class="invalid-feedback">
+                  {{ getFieldError('slug') }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="excerpt">Excerpt</label>
+              <textarea
+                id="excerpt"
+                formControlName="excerpt"
+                class="form-control"
+                rows="3"
+                placeholder="Brief description of the post (optional)..."
+              ></textarea>
+              <small class="form-text">Short summary that appears in post listings</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="content">Content *</label>
+              <textarea
+                id="content"
+                formControlName="content"
+                class="form-control content-editor"
+                [class.is-invalid]="content?.invalid && content?.touched"
+                rows="12"
+                placeholder="Write your post content here..."
+              ></textarea>
+              @if (hasError('content', 'required') || hasError('content', 'minlength')) {
+                <div class="invalid-feedback">
+                  {{ getFieldError('content') }}
+                </div>
+              }
             </div>
           </div>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="slug">URL Slug *</label>
-            <input
-              type="text"
-              id="slug"
-              formControlName="slug"
-              class="form-control"
-              [class.is-invalid]="slug?.invalid && slug?.touched"
-              (blur)="onSlugChange()"
-              placeholder="url-friendly-slug"
-            >
-            <small class="form-text">URL-friendly version of the title (lowercase, hyphens only)</small>
-            <div *ngIf="hasError('slug', 'required') || hasError('slug', 'pattern')" class="invalid-feedback">
-              {{ getFieldError('slug') }}
+        <!-- Post Settings Section -->
+        <div class="form-section">
+          <h3>Post Settings</h3>
+          
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label for="status">Status *</label>
+              <select
+                id="status"
+                formControlName="status"
+                class="form-control"
+                [class.is-invalid]="status?.invalid && status?.touched"
+              >
+                @for (option of statusOptions(); track option.value) {
+                  <option [value]="option.value">
+                    {{ option.label }}
+                  </option>
+                }
+              </select>
             </div>
-          </div>
-        </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="excerpt">Excerpt</label>
-            <textarea
-              id="excerpt"
-              formControlName="excerpt"
-              class="form-control"
-              rows="3"
-              placeholder="Brief description of the post (optional)..."
-            ></textarea>
-            <small class="form-text">Short summary that appears in post listings</small>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="content">Content *</label>
-            <textarea
-              id="content"
-              formControlName="content"
-              class="form-control content-editor"
-              [class.is-invalid]="content?.invalid && content?.touched"
-              rows="12"
-              placeholder="Write your post content here..."
-            ></textarea>
-            <div *ngIf="hasError('content', 'required') || hasError('content', 'minlength')" class="invalid-feedback">
-              {{ getFieldError('content') }}
+            <div class="form-group half-width">
+              <label for="category">Category *</label>
+              <select
+                id="category"
+                formControlName="category"
+                class="form-control"
+                [class.is-invalid]="category?.invalid && category?.touched"
+              >
+                <option value="">Select a category</option>
+                @for (cat of activeCategories(); track cat._id) {
+                  <option [value]="cat._id">
+                    {{ cat.name }}
+                  </option>
+                }
+              </select>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Post Settings Section -->
-      <div class="form-section">
-        <h3>Post Settings</h3>
-        
-        <div class="form-row">
-          <div class="form-group half-width">
-            <label for="status">Status *</label>
-            <select
-              id="status"
-              formControlName="status"
-              class="form-control"
-              [class.is-invalid]="status?.invalid && status?.touched"
-            >
-              <option *ngFor="let option of statusOptions" [value]="option.value">
-                {{ option.label }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group half-width">
-            <label for="category">Category *</label>
-            <select
-              id="category"
-              formControlName="category"
-              class="form-control"
-              [class.is-invalid]="category?.invalid && category?.touched"
-            >
-              <option value="">Select a category</option>
-              <option *ngFor="let cat of categories" [value]="cat._id">
-                {{ cat.name }}
-              </option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label for="placement">Placement *</label>
-            <select
-              id="placement"
-              formControlName="placement"
-              class="form-control"
-              [class.is-invalid]="placement?.invalid && placement?.touched"
-            >
-              <option value="">Select a placement</option>
-              <option *ngFor="let place of placements" [value]="place._id">
-                {{ place.name }} ({{ place.subCategory }})
-              </option>
-            </select>
-            <small class="form-text">Where this post will be displayed on the site</small>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="image">Image URL</label>
-            <input
-              type="url"
-              id="image"
-              formControlName="image"
-              class="form-control"
-              placeholder="https://example.com/image.jpg"
-            >
-            <small class="form-text">URL to the main image for this post</small>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tags Section -->
-      <div class="form-section">
-        <h3>Tags</h3>
-        
-        <div class="tags-input-container">
-          <div class="current-tags" *ngIf="getCurrentTags().length > 0">
-            <span *ngFor="let tag of getCurrentTags(); let i = index" class="tag-badge">
-              {{ tag }}
-              <button type="button" class="tag-remove" (click)="removeTag(i)">
-                <i class="fas fa-times"></i>
-              </button>
-            </span>
           </div>
           
-          <div class="add-tag">
-            <input
-              type="text"
-              [(ngModel)]="tagInput"
-              (keypress)="onTagInputKeyPress($event)"
-              class="form-control"
-              placeholder="Add a tag and press Enter..."
+          <div class="form-row">
+            <div class="form-group">
+              <label for="placement">Placement *</label>
+              <select
+                id="placement"
+                formControlName="placement"
+                class="form-control"
+                [class.is-invalid]="placement?.invalid && placement?.touched"
+              >
+                <option value="">Select a placement</option>
+                @for (place of placements(); track place._id) {
+                  <option [value]="place._id">
+                    {{ place.name }}
+                    @if (place.subCategory) {
+                      ({{ place.subCategory }})
+                    }
+                  </option>
+                }
+              </select>
+              <small class="form-text">Where this post will be displayed on the site</small>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="image">Image URL</label>
+              <input
+                type="url"
+                id="image"
+                formControlName="image"
+                class="form-control"
+                placeholder="https://example.com/image.jpg"
+              >
+              <small class="form-text">URL to the main image for this post</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Publishing Schedule Section -->
+        <div class="form-section">
+          <h3>Publishing Schedule</h3>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="publishedAt">Published Date (Optional)</label>
+              <input
+                type="datetime-local"
+                id="publishedAt"
+                formControlName="publishedAt"
+                class="form-control"
+              >
+              <small class="form-text">Leave empty to publish immediately when status is PUBLISHED</small>
+              @if (postForm.get('publishedAt')?.invalid && postForm.get('publishedAt')?.touched) {
+                <div class="error-message">
+                  @if (postForm.get('publishedAt')?.errors?.['invalidDate']) {
+                    <span>Please enter a valid date</span>
+                  }
+                </div>
+              }
+            </div>
+            
+            <div class="form-group">
+              <label for="expiredAt">Expiration Date <span class="required">*</span></label>
+              <input
+                type="datetime-local"
+                id="expiredAt"
+                formControlName="expiredAt"
+                class="form-control"
+                [min]="getCurrentDateTimeString()"
+              >
+              <small class="form-text">Post will automatically expire on this date</small>
+              @if (postForm.get('expiredAt')?.invalid && postForm.get('expiredAt')?.touched) {
+                <div class="error-message">
+                  @if (postForm.get('expiredAt')?.errors?.['required']) {
+                    <span>Expiration date is required</span>
+                  }
+                  @if (postForm.get('expiredAt')?.errors?.['invalidDate']) {
+                    <span>Please enter a valid future date</span>
+                  }
+                  @if (postForm.get('expiredAt')?.errors?.['futureDate']) {
+                    <span>Expiration date must be in the future</span>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="saving()">
+            <i class="fas fa-times"></i>
+            Cancel
+          </button>
+          
+          <div class="primary-actions">
+            <button 
+              type="submit" 
+              class="btn btn-primary"
+              [disabled]="postForm.invalid || saving()"
             >
-            <button type="button" class="btn btn-secondary" (click)="addTag()" [disabled]="!tagInput.trim()">
-              <i class="fas fa-plus"></i>
-              Add Tag
+              @if (saving()) {
+                <span class="spinner-sm"></span>
+              } @else {
+                <i class="fas fa-save"></i>
+              }
+              {{ saving() ? 'Saving...' : (isEditMode() ? 'Update Post' : 'Create Post') }}
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- SEO Meta Section -->
-      <div class="form-section">
-        <h3>SEO & Meta</h3>
-        
-        <div class="form-row">
-          <div class="form-group">
-            <label for="metaTitle">Meta Title</label>
-            <input
-              type="text"
-              id="metaTitle"
-              formControlName="metaTitle"
-              class="form-control"
-              placeholder="SEO title for search engines..."
-              maxlength="60"
-            >
-            <small class="form-text">Recommended: 50-60 characters</small>
-          </div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label for="metaDescription">Meta Description</label>
-            <textarea
-              id="metaDescription"
-              formControlName="metaDescription"
-              class="form-control"
-              rows="3"
-              placeholder="SEO description for search engines..."
-              maxlength="160"
-            ></textarea>
-            <small class="form-text">Recommended: 120-160 characters</small>
-          </div>
-        </div>
-      </div>
-
-      <!-- Form Actions -->
-      <div class="form-actions">
-        <button type="button" class="btn btn-secondary" (click)="onCancel()" [disabled]="saving">
-          <i class="fas fa-times"></i>
-          Cancel
-        </button>
-        
-        <div class="primary-actions">
-          <button 
-            type="submit" 
-            class="btn btn-primary"
-            [disabled]="postForm.invalid || saving"
-          >
-            <span *ngIf="saving" class="spinner-sm"></span>
-            <i *ngIf="!saving" class="fas fa-save"></i>
-            {{ saving ? 'Saving...' : (isEditMode ? 'Update Post' : 'Create Post') }}
-          </button>
-        </div>
-      </div>
-    </form>
-  </div>
+      </form>
+    </div>
+  }
 </div>

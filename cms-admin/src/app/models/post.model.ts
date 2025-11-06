@@ -10,9 +10,9 @@ export interface Post {
   placement: string | Placement;
   tags?: string[];
   image?: string;
-  metaTitle?: string;
-  metaDescription?: string;
   viewCount: number;
+  publishedAt: Date;
+  expiredAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -20,21 +20,22 @@ export interface Post {
 export enum PostStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
-  ARCHIVED = 'archived'
+  ARCHIVED = 'archived',
+  EXPIRED = 'expired'
 }
 
 export interface CreatePostDto {
   title: string;
   slug: string;
   excerpt?: string;
-  content: string;
+  content?: string;
   status?: PostStatus;
   category: string;
   placement: string;
   tags?: string[];
   image?: string;
-  metaTitle?: string;
-  metaDescription?: string;
+  publishedAt?: Date;
+  expiredAt: Date;
 }
 
 export interface UpdatePostDto {
@@ -43,10 +44,12 @@ export interface UpdatePostDto {
   excerpt?: string;
   content?: string;
   status?: PostStatus;
+  category?: string;
+  placement?: string;
   tags?: string[];
   image?: string;
-  metaTitle?: string;
-  metaDescription?: string;
+  publishedAt?: Date;
+  expiredAt?: Date;
 }
 
 // Import User interface

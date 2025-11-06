@@ -45,6 +45,10 @@ export class PlacementsService {
     return placement;
   }
 
+  async findByName(name: string): Promise<Placement | null> {
+    return this.placementModel.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } }).exec();
+  }
+
   async findBySubCategory(subCategory: string): Promise<Placement[]> {
     return this.placementModel
       .find({ subCategory, isActive: true })

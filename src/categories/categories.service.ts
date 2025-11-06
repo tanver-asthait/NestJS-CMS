@@ -25,6 +25,10 @@ export class CategoriesService {
     return category;
   }
 
+  async findByName(name: string): Promise<Category | null> {
+    return this.categoryModel.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } }).exec();
+  }
+
   async incrementPostCount(id: string): Promise<void> {
     await this.categoryModel
       .findByIdAndUpdate(id, { $inc: { postCount: 1 } })

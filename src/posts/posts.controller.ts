@@ -104,6 +104,44 @@ export class PostsController {
     return this.postsService.findByTag(tag, queryParams);
   }
 
+  @Get('filter')
+  findByFilters(
+    @Query('categoryName') categoryName?: string,
+    @Query('placementName') placementName?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const queryParams: PostQueryParams = {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    };
+
+    return this.postsService.findByFilters(categoryName, placementName, queryParams);
+  }
+
+  @Get('test-published')
+  findPublishedNotExpired(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    const queryParams: PostQueryParams = {
+      page: page ? parseInt(page, 10) : undefined,
+      limit: limit ? parseInt(limit, 10) : undefined,
+    };
+
+    return this.postsService.findByFilters(undefined, undefined, queryParams);
+  }
+
+  @Get('debug/categories')
+  async getDebugCategories() {
+    return this.postsService.getDebugCategories();
+  }
+
+  @Get('debug/placements')
+  async getDebugPlacements() {
+    return this.postsService.getDebugPlacements();
+  }
+
   @Get('slug/:slug')
   findBySlug(@Param('slug') slug: string) {
     return this.postsService.findBySlug(slug);
