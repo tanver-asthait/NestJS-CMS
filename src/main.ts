@@ -1,6 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 
 async function bootstrap() {
   try {
@@ -14,6 +16,10 @@ async function bootstrap() {
       allowedHeaders: ['Content-Type', 'Authorization'],
       credentials: true,
     });
+    
+    // Global response standardization
+    app.useGlobalInterceptors(new ResponseInterceptor());
+    app.useGlobalFilters(new GlobalExceptionFilter());
     
     // Enable validation
     app.useGlobalPipes(new ValidationPipe({

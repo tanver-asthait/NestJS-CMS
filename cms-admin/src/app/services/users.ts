@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { User, CreateUserDto, UpdateUserDto, UserRole } from '../models/user.model';
 import { AuthService } from './auth.service';
+import { StandardResponse } from '../models/api-response.model';
 
 export interface UsersResponse {
   users: User[];
@@ -40,12 +41,14 @@ export class Users {
     if (params.role) httpParams = httpParams.set('role', params.role);
     if (params.search) httpParams = httpParams.set('search', params.search);
 
-    return this.http.get<UsersResponse>(this.apiUrl, { params: httpParams });
+    return this.http.get<StandardResponse<UsersResponse>>(this.apiUrl, { params: httpParams })
+      .pipe(map(response => response.data));
   }
 
   // Get all users without pagination (for dropdowns)
   getAllUsers(): Observable<User[]> {
-    return this.http.get<User[]>(`${this.apiUrl}/all`);
+    return this.http.get<StandardResponse<User[]>>(`${this.apiUrl}/all`)
+      .pipe(map(response => response.data));
   }
 
   // Get users by role
@@ -56,22 +59,26 @@ export class Users {
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.search) httpParams = httpParams.set('search', params.search);
 
-    return this.http.get<UsersResponse>(`${this.apiUrl}/role/${role}`, { params: httpParams });
+    return this.http.get<StandardResponse<UsersResponse>>(`${this.apiUrl}/role/${role}`, { params: httpParams })
+      .pipe(map(response => response.data));
   }
 
   // Get single user by ID
   getUser(id: string): Observable<User> {
-    return this.http.get<User>(`${this.apiUrl}/${id}`);
+    return this.http.get<StandardResponse<User>>(`${this.apiUrl}/${id}`)
+      .pipe(map(response => response.data));
   }
 
   // Create new user (admin only)
   createUser(userData: CreateUserDto): Observable<User> {
-    return this.http.post<User>(this.apiUrl, userData);
+    return this.http.post<StandardResponse<User>>(this.apiUrl, userData)
+      .pipe(map(response => response.data));
   }
 
   // Update user
   updateUser(id: string, userData: UpdateUserDto): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/${id}`, userData);
+    return this.http.patch<StandardResponse<User>>(`${this.apiUrl}/${id}`, userData)
+      .pipe(map(response => response.data));
   }
 
   // Update user role (admin only)
@@ -81,17 +88,20 @@ export class Users {
       throw new Error('Only administrators can update user roles');
     }
     
-    return this.http.patch<User>(`${this.apiUrl}/${id}/role`, { role });
+    return this.http.patch<StandardResponse<User>>(`${this.apiUrl}/${id}/role`, { role })
+      .pipe(map(response => response.data));
   }
 
   // Delete user (admin only)
   deleteUser(id: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+    return this.http.delete<StandardResponse<{ message: string }>>(`${this.apiUrl}/${id}`)
+      .pipe(map(response => response.data));
   }
 
   // Update user last login
   updateLastLogin(id: string): Observable<User> {
-    return this.http.patch<User>(`${this.apiUrl}/${id}/login`, {});
+    return this.http.patch<StandardResponse<User>>(`${this.apiUrl}/${id}/login`, {})
+      .pipe(map(response => response.data));
   }
 
   // Change user password

@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, tap, map } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { AuthResponse, LoginDto, RegisterDto } from '../models/auth.model';
 import { User } from '../models/user.model';
+import { StandardResponse } from '../models/api-response.model';
 
 @Injectable({
   providedIn: 'root'
@@ -23,19 +24,21 @@ export class AuthService {
   }
 
   login(credentials: LoginDto): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, credentials)
+    return this.http.post<StandardResponse<AuthResponse>>(`${this.apiUrl}/auth/login`, credentials)
       .pipe(
-        tap(response => {
-          this.setSession(response);
+        map(response => response.data),
+        tap(authResponse => {
+          this.setSession(authResponse);
         })
       );
   }
 
   register(userData: RegisterDto): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, userData)
+    return this.http.post<StandardResponse<AuthResponse>>(`${this.apiUrl}/auth/register`, userData)
       .pipe(
-        tap(response => {
-          this.setSession(response);
+        map(response => response.data),
+        tap(authResponse => {
+          this.setSession(authResponse);
         })
       );
   }

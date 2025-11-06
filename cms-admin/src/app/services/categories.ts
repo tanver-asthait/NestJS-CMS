@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Category, CreateCategoryDto, UpdateCategoryDto } from '../models/category.model';
+import { StandardResponse } from '../models/api-response.model';
 
 export interface CategoriesResponse {
   categories: Category[];
@@ -34,37 +35,44 @@ export class Categories {
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.search) httpParams = httpParams.set('search', params.search);
 
-    return this.http.get<Category[]>(this.apiUrl, { params: httpParams });
+    return this.http.get<StandardResponse<Category[]>>(this.apiUrl, { params: httpParams })
+      .pipe(map(response => response.data));
   }
 
   // Get all categories without pagination (for dropdowns)
   getAllCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(`${this.apiUrl}/all`);
+    return this.http.get<StandardResponse<Category[]>>(`${this.apiUrl}/all`)
+      .pipe(map(response => response.data));
   }
 
   // Get single category by ID
   getCategory(id: string): Observable<Category> {
-    return this.http.get<Category>(`${this.apiUrl}/${id}`);
+    return this.http.get<StandardResponse<Category>>(`${this.apiUrl}/${id}`)
+      .pipe(map(response => response.data));
   }
 
   // Get category by slug
   getCategoryBySlug(slug: string): Observable<Category> {
-    return this.http.get<Category>(`${this.apiUrl}/slug/${slug}`);
+    return this.http.get<StandardResponse<Category>>(`${this.apiUrl}/slug/${slug}`)
+      .pipe(map(response => response.data));
   }
 
   // Create new category
   createCategory(categoryData: CreateCategoryDto): Observable<Category> {
-    return this.http.post<Category>(this.apiUrl, categoryData);
+    return this.http.post<StandardResponse<Category>>(this.apiUrl, categoryData)
+      .pipe(map(response => response.data));
   }
 
   // Update category
   updateCategory(id: string, categoryData: UpdateCategoryDto): Observable<Category> {
-    return this.http.patch<Category>(`${this.apiUrl}/${id}`, categoryData);
+    return this.http.patch<StandardResponse<Category>>(`${this.apiUrl}/${id}`, categoryData)
+      .pipe(map(response => response.data));
   }
 
   // Delete category
   deleteCategory(id: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+    return this.http.delete<StandardResponse<{ message: string }>>(`${this.apiUrl}/${id}`)
+      .pipe(map(response => response.data));
   }
 
   // Generate slug from name
@@ -82,6 +90,7 @@ export class Categories {
     let httpParams = new HttpParams().set('slug', slug);
     if (excludeId) httpParams = httpParams.set('excludeId', excludeId);
     
-    return this.http.get<{ available: boolean }>(`${this.apiUrl}/check-slug`, { params: httpParams });
+    return this.http.get<StandardResponse<{ available: boolean }>>(`${this.apiUrl}/check-slug`, { params: httpParams })
+      .pipe(map(response => response.data));
   }
 }

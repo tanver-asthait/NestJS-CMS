@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Post, CreatePostDto, UpdatePostDto, PostStatus } from '../models/post.model';
+import { StandardResponse } from '../models/api-response.model';
 
 export interface PostsResponse {
   posts: Post[];
@@ -40,7 +41,8 @@ export class Posts {
     if (params.search) httpParams = httpParams.set('search', params.search);
     if (params.tags?.length) httpParams = httpParams.set('tags', params.tags.join(','));
 
-    return this.http.get<PostsResponse>(this.apiUrl, { params: httpParams });
+    return this.http.get<StandardResponse<PostsResponse>>(this.apiUrl, { params: httpParams })
+      .pipe(map(response => response.data));
   }
 
   // Get posts by author
@@ -51,7 +53,8 @@ export class Posts {
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
     if (params.status) httpParams = httpParams.set('status', params.status);
 
-    return this.http.get<PostsResponse>(`${this.apiUrl}/author/${authorId}`, { params: httpParams });
+    return this.http.get<StandardResponse<PostsResponse>>(`${this.apiUrl}/author/${authorId}`, { params: httpParams })
+      .pipe(map(response => response.data));
   }
 
   // Get posts by tag
@@ -61,37 +64,44 @@ export class Posts {
     if (params.page) httpParams = httpParams.set('page', params.page.toString());
     if (params.limit) httpParams = httpParams.set('limit', params.limit.toString());
 
-    return this.http.get<PostsResponse>(`${this.apiUrl}/tag/${tag}`, { params: httpParams });
+    return this.http.get<StandardResponse<PostsResponse>>(`${this.apiUrl}/tag/${tag}`, { params: httpParams })
+      .pipe(map(response => response.data));
   }
 
   // Get single post by ID
   getPost(id: string): Observable<Post> {
-    return this.http.get<Post>(`${this.apiUrl}/${id}`);
+    return this.http.get<StandardResponse<Post>>(`${this.apiUrl}/${id}`)
+      .pipe(map(response => response.data));
   }
 
   // Get post by slug
   getPostBySlug(slug: string): Observable<Post> {
-    return this.http.get<Post>(`${this.apiUrl}/slug/${slug}`);
+    return this.http.get<StandardResponse<Post>>(`${this.apiUrl}/slug/${slug}`)
+      .pipe(map(response => response.data));
   }
 
   // Create new post
   createPost(postData: CreatePostDto): Observable<Post> {
-    return this.http.post<Post>(this.apiUrl, postData);
+    return this.http.post<StandardResponse<Post>>(this.apiUrl, postData)
+      .pipe(map(response => response.data));
   }
 
   // Update post
   updatePost(id: string, postData: UpdatePostDto): Observable<Post> {
-    return this.http.patch<Post>(`${this.apiUrl}/${id}`, postData);
+    return this.http.patch<StandardResponse<Post>>(`${this.apiUrl}/${id}`, postData)
+      .pipe(map(response => response.data));
   }
 
   // Delete post
   deletePost(id: string): Observable<{ message: string }> {
-    return this.http.delete<{ message: string }>(`${this.apiUrl}/${id}`);
+    return this.http.delete<StandardResponse<{ message: string }>>(`${this.apiUrl}/${id}`)
+      .pipe(map(response => response.data));
   }
 
   // Update post view count
   updateViewCount(id: string): Observable<Post> {
-    return this.http.patch<Post>(`${this.apiUrl}/${id}/view`, {});
+    return this.http.patch<StandardResponse<Post>>(`${this.apiUrl}/${id}/view`, {})
+      .pipe(map(response => response.data));
   }
 
   // Generate slug from title
