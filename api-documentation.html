@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDJobs CMS API Documentation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .nav {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            padding: 0;
+            margin: 0;
+            list-style: none;
+        }
+        .nav li {
+            margin: 0;
+        }
+        .nav a {
+            display: block;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: #495057;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .nav a:hover, .nav a.active {
+            background: white;
+            border-bottom-color: #667eea;
+            color: #667eea;
+        }
+        .content {
+            padding: 30px;
+        }
+        .endpoint {
+            margin: 30px 0;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .endpoint-header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .method {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 15px;
+            font-size: 0.9em;
+        }
+        .method.get { background: #d4edda; color: #155724; }
+        .method.post { background: #d1ecf1; color: #0c5460; }
+        .method.patch { background: #fff3cd; color: #856404; }
+        .method.delete { background: #f8d7da; color: #721c24; }
+        .endpoint-path {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+            color: #495057;
+        }
+        .endpoint-body {
+            padding: 20px;
+        }
+        .description {
+            margin-bottom: 20px;
+            color: #6c757d;
+        }
+        .sample-request, .sample-response {
+            margin: 20px 0;
+        }
+        .sample-request h4, .sample-response h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            overflow-x: auto;
+            font-size: 0.9em;
+        }
+        .auth-required {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 15px 0;
+            color: #856404;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .quick-start {
+            background: #e7f3ff;
+            border: 1px solid #b3d8ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .download-links {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .download-links a {
+            display: inline-block;
+            margin: 0 10px;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+        .download-links a:hover {
+            background: #5a6fd8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>BDJobs CMS API</h1>
+            <p>Complete API documentation with sample requests and responses</p>
+        </div>
+        
+        <ul class="nav">
+            <li><a href="#overview" class="nav-link active" onclick="showSection('overview')">Overview</a></li>
+            <li><a href="#auth" class="nav-link" onclick="showSection('auth')">Authentication</a></li>
+            <li><a href="#categories" class="nav-link" onclick="showSection('categories')">Categories</a></li>
+            <li><a href="#placements" class="nav-link" onclick="showSection('placements')">Placements</a></li>
+            <li><a href="#posts" class="nav-link" onclick="showSection('posts')">Posts</a></li>
+            <li><a href="#users" class="nav-link" onclick="showSection('users')">Users</a></li>
+        </ul>
+
+        <div class="content">
+            <div id="overview" class="section active">
+                <h2>API Overview</h2>
+                <div class="quick-start">
+                    <h3>Quick Start</h3>
+                    <p><strong>Base URL:</strong> <code>http://localhost:3000</code></p>
+                    <p><strong>Authentication:</strong> JWT Bearer Token</p>
+                    <p><strong>Content-Type:</strong> application/json</p>
+                </div>
+
+                <div class="download-links">
+                    <a href="BDJobs-CMS-API.postman_collection.json" download>📥 Download Postman Collection</a>
+                    <a href="BDJobs-CMS.postman_environment.json" download>🌍 Download Environment</a>
+                    <a href="api-endpoints.http" download>📄 Download REST Client File</a>
+                </div>
+
+                <h3>Response Format</h3>
+                <p>All API responses follow this standard format:</p>
+                <pre>{
+  "success": true,
+  "data": {...},
+  "message": "Operation successful",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}</pre>
+
+                <h3>Error Format</h3>
+                <pre>{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Validation failed",
+    "details": [...]
+  },
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}</pre>
+            </div>
+
+            <div id="auth" class="section">
+                <h2>Authentication</h2>
+                
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/auth/register</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Register a new user account</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "firstName": "John",
+  "lastName": "Doe", 
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "ADMIN"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/auth/login</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Login and receive JWT token</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "email": "john@example.com",
+  "password": "password123"
+}</pre>
+                        </div>
+                        <div class="sample-response">
+                            <h4>Sample Response:</h4>
+                            <pre>{
+  "success": true,
+  "data": {
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "_id": "60d5ecb74f3b3c001f123456",
+      "firstName": "John",
+      "lastName": "Doe",
+      "email": "john@example.com",
+      "role": "ADMIN"
+    }
+  }
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="categories" class="section">
+                <h2>Categories</h2>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/categories</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get all categories</div>
+                        <div class="sample-response">
+                            <h4>Sample Response:</h4>
+                            <pre>{
+  "success": true,
+  "data": [
+    {
+      "_id": "60d5ecb74f3b3c001f123456",
+      "name": "Technology",
+      "description": "Technology related posts",
+      "slug": "technology",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  ]
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/categories</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Create a new category</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "name": "Technology",
+  "description": "Technology related posts",
+  "slug": "technology"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/categories/:id</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get category by ID</div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method patch">PATCH</span>
+                        <span class="endpoint-path">/categories/:id</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Update category</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "name": "Updated Technology",
+  "description": "Updated description"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/categories/:id</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Delete category</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="placements" class="section">
+                <h2>Placements</h2>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/placements</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get all placements</div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/placements/subcategory/:subCategory</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get placements by subcategory</div>
+                        <p>Example: <code>/placements/subcategory/topnav</code></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/placements</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Create a new placement</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "name": "Header Banner",
+  "description": "Main header banner placement",
+  "slug": "header-banner",
+  "subCategory": "header",
+  "sortOrder": 1,
+  "isActive": true
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="posts" class="section">
+                <h2>Posts</h2>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/posts</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get all posts with pagination and filters</div>
+                        <p><strong>Query Parameters:</strong></p>
+                        <ul>
+                            <li><code>page</code> - Page number (default: 1)</li>
+                            <li><code>limit</code> - Items per page (default: 10)</li>
+                            <li><code>status</code> - Filter by status (DRAFT, PUBLISHED, ARCHIVED)</li>
+                        </ul>
+                        <p>Example: <code>/posts?page=1&limit=10&status=PUBLISHED</code></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/posts/category/:categoryId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get posts by category</div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/posts/placement/:placementId</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get posts by placement</div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/posts</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Create a new post</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "title": "My New Post",
+  "slug": "my-new-post",
+  "excerpt": "This is a short excerpt",
+  "content": "This is the full content of the post",
+  "status": "DRAFT",
+  "category": "category_id_here",
+  "placement": "placement_id_here",
+  "tags": ["technology", "news"],
+  "image": "https://example.com/image.jpg",
+  "metaTitle": "SEO Title",
+  "metaDescription": "SEO Description"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="users" class="section">
+                <h2>Users</h2>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/users</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Get all users with pagination</div>
+                        <p>Query Parameters: <code>page</code>, <code>limit</code></p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method post">POST</span>
+                        <span class="endpoint-path">/users</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Create a new user</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane@example.com",
+  "password": "password123",
+  "role": "EDITOR"
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

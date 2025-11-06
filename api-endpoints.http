@@ -1,0 +1,201 @@
+# BDJobs CMS API Endpoints
+# Use the REST Client extension in VS Code to test these endpoints
+
+@baseUrl = http://localhost:3000
+@token = your-jwt-token-here
+
+### Health Check
+GET {{baseUrl}}/
+
+### === Authentication ===
+
+### Register User
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "ADMIN"
+}
+
+### Login User (Get Token)
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+### === Categories ===
+
+### Get All Categories
+GET {{baseUrl}}/categories
+
+### Get Category by ID
+GET {{baseUrl}}/categories/category_id_here
+
+### Create Category
+POST {{baseUrl}}/categories
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Technology",
+  "description": "Technology related posts",
+  "slug": "technology"
+}
+
+### Update Category
+PATCH {{baseUrl}}/categories/category_id_here
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Updated Technology",
+  "description": "Updated description"
+}
+
+### Delete Category
+DELETE {{baseUrl}}/categories/category_id_here
+Authorization: Bearer {{token}}
+
+### === Placements ===
+
+### Get All Placements
+GET {{baseUrl}}/placements
+
+### Get Placements by SubCategory
+GET {{baseUrl}}/placements/subcategory/topnav
+
+### Get Placement by ID
+GET {{baseUrl}}/placements/placement_id_here
+
+### Create Placement
+POST {{baseUrl}}/placements
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Header Banner",
+  "description": "Main header banner placement",
+  "slug": "header-banner",
+  "subCategory": "header",
+  "sortOrder": 1,
+  "isActive": true
+}
+
+### Update Placement
+PATCH {{baseUrl}}/placements/placement_id_here
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Updated Header Banner",
+  "isActive": false
+}
+
+### Delete Placement
+DELETE {{baseUrl}}/placements/placement_id_here
+Authorization: Bearer {{token}}
+
+### === Posts ===
+
+### Get All Posts
+GET {{baseUrl}}/posts?page=1&limit=10&status=PUBLISHED
+
+### Get Posts by Category
+GET {{baseUrl}}/posts/category/category_id_here
+
+### Get Posts by Placement
+GET {{baseUrl}}/posts/placement/placement_id_here
+
+### Get Posts by Author
+GET {{baseUrl}}/posts/author/author_id_here
+
+### Get Posts by Tag
+GET {{baseUrl}}/posts/tag/technology
+
+### Get Post by Slug
+GET {{baseUrl}}/posts/slug/my-post-slug
+
+### Get Post by ID
+GET {{baseUrl}}/posts/post_id_here
+
+### Create Post
+POST {{baseUrl}}/posts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "My New Post",
+  "slug": "my-new-post",
+  "excerpt": "This is a short excerpt",
+  "content": "This is the full content of the post",
+  "status": "DRAFT",
+  "category": "category_id_here",
+  "placement": "placement_id_here",
+  "tags": ["technology", "news"],
+  "image": "https://example.com/image.jpg",
+  "metaTitle": "SEO Title",
+  "metaDescription": "SEO Description"
+}
+
+### Update Post
+PATCH {{baseUrl}}/posts/post_id_here
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "title": "Updated Post Title",
+  "status": "PUBLISHED",
+  "content": "Updated content"
+}
+
+### Delete Post
+DELETE {{baseUrl}}/posts/post_id_here
+Authorization: Bearer {{token}}
+
+### Increment Post Views
+PATCH {{baseUrl}}/posts/post_id_here/view
+
+### === Users ===
+
+### Get All Users
+GET {{baseUrl}}/users?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### Get User by ID
+GET {{baseUrl}}/users/user_id_here
+Authorization: Bearer {{token}}
+
+### Create User
+POST {{baseUrl}}/users
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "email": "jane@example.com",
+  "password": "password123",
+  "role": "EDITOR"
+}
+
+### Update User
+PATCH {{baseUrl}}/users/user_id_here
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "Jane Updated",
+  "role": "ADMIN"
+}
+
+### Delete User
+DELETE {{baseUrl}}/users/user_id_here
+Authorization: Bearer {{token}}
