@@ -1,14 +1,16 @@
 <header class="topbar">
   <div class="brand">CMS Admin</div>
   <div class="topbar-actions">
-    <button class="btn" (click)="toggleSidebar()">☰</button>
+    <button class="btn" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+      <i class="bi bi-list"></i>
+    </button>
     <!-- user area -->
     <div class="user-area">
       @if (getCurrentUser()) {
         <span class="user-name">{{ getCurrentUser()?.firstName }} {{ getCurrentUser()?.lastName }}</span>
-        <button class="btn btn-logout" (click)="logout()">
+        <button class="btn-logout" (click)="logout()" aria-label="Logout">
           <i class="bi bi-box-arrow-right"></i>
-          Logout
+          <span>Logout</span>
         </button>
       }
     </div>
@@ -16,7 +18,12 @@
 </header>
 
 <div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed()">
-  <nav class="sidebar">
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay"
+       [class.active]="!sidebarCollapsed() && isMobile()"
+       (click)="closeSidebar()"></div>
+
+  <nav class="sidebar" role="navigation" aria-label="Main navigation">
     <div class="sidebar-header">
       @if(!sidebarCollapsed()) {
         <h3>CMS Admin</h3>
@@ -28,7 +35,11 @@
     <ul class="sidebar-menu">
       @for (item of menuItems(); track item.link) {
         <li class="menu-item">
-          <a [routerLink]="item.link" class="menu-link" routerLinkActive="active">
+          <a [routerLink]="item.link"
+             class="menu-link"
+             routerLinkActive="active"
+             [attr.data-label]="item.label"
+             (click)="onMenuClick()">
             <i class="{{ item.icon }}"></i>
             @if(!sidebarCollapsed()) {
               <span>{{ item.label }}</span>
@@ -39,13 +50,16 @@
     </ul>
 
     <div class="sidebar-footer">
-      <button class="sidebar-toggle" (click)="toggleSidebar()">
-        @if(!sidebarCollapsed()) { Collapse } @else { Expand }
+      <button class="sidebar-toggle" (click)="toggleSidebar()" aria-label="Toggle sidebar">
+        <i class="bi" [class.bi-chevron-left]="!sidebarCollapsed()" [class.bi-chevron-right]="sidebarCollapsed()"></i>
+        @if(!sidebarCollapsed()) {
+          <span>Collapse</span>
+        }
       </button>
     </div>
   </nav>
 
-  <main class="main-content">
+  <main class="main-content" role="main">
     <router-outlet />
   </main>
 </div>
