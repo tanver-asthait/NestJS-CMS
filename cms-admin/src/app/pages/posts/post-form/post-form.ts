@@ -1,11 +1,22 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  Validators,
+  FormsModule,
+} from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Posts } from '../../../services/posts';
 import { Categories } from '../../../services/categories';
 import { Placements } from '../../../services/placements';
-import { Post, CreatePostDto, UpdatePostDto, PostStatus } from '../../../models/post.model';
+import {
+  Post,
+  CreatePostDto,
+  UpdatePostDto,
+  PostStatus,
+} from '../../../models/post.model';
 import { Category } from '../../../models/category.model';
 import { User } from '../../../models/user.model';
 import { AuthService } from '../../../services/auth.service';
@@ -18,62 +29,79 @@ import { AuthService } from '../../../services/auth.service';
 })
 export class PostFormComponent implements OnInit {
   postForm: FormGroup;
-  
+
   // Signals for reactive state
   loading = signal(false);
   saving = signal(false);
   error = signal('');
   success = signal('');
-  
+
   // Form mode
   isEditMode = signal(false);
   postId = signal<string | null>(null);
-  
+
   // Current user
   currentUser = signal<User | null>(null);
-  
+
   // Options for dropdowns - using signals
   statusOptions = signal<Array<{ value: PostStatus; label: string }>>([]);
   categories = signal<Category[]>([]);
-  placements = signal<Array<{ _id: string; name: string; slug?: string; subCategory?: string }>>([]);
-  
+  placements = signal<
+    Array<{ _id: string; name: string; slug?: string; subCategory?: string }>
+  >([]);
+
   // Computed properties
-  activeCategories = computed(() => 
-    this.categories().filter(cat => cat.isActive === true)
+  activeCategories = computed(() =>
+    this.categories().filter((cat) => cat.isActive === true),
   );
-  
+
   // Enums for template
   PostStatus = PostStatus;
 
   constructor(
     private fb: FormBuilder,
-  private postsService: Posts,
-  private categoriesService: Categories,
-  private placementsService: Placements,
-  private authService: AuthService,
+    private postsService: Posts,
+    private categoriesService: Categories,
+    private placementsService: Placements,
+    private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
   ) {
     this.postForm = this.fb.group({
-      title: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(200)]],
-      slug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/), Validators.maxLength(200)]],
+      title: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(3),
+          Validators.maxLength(200),
+        ],
+      ],
+      slug: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(/^[a-z0-9-]+$/),
+          Validators.maxLength(200),
+        ],
+      ],
       excerpt: ['', [Validators.maxLength(500)]],
       content: [''],
       status: [PostStatus.DRAFT, [Validators.required]],
       category: ['', [Validators.required]],
       placement: ['', [Validators.required]],
       image: ['', [this.urlValidator]],
+      orderNo: [1, [Validators.required, Validators.min(1)]],
       publishedAt: [''],
-      expiredAt: ['', [Validators.required]]
+      expiredAt: ['', [Validators.required]],
     });
   }
 
   ngOnInit(): void {
     this.currentUser.set(this.authService.getCurrentUser());
     this.initializeFormOptions();
-    
+
     // Check if we're in edit mode
-    this.route.params.subscribe(params => {
+    this.route.params.subscribe((params) => {
       if (params['id']) {
         this.isEditMode.set(true);
         this.postId.set(params['id']);
@@ -82,9 +110,9 @@ export class PostFormComponent implements OnInit {
         // nothing to set for author from frontend; backend uses token
       }
     });
-    
+
     // Auto-generate slug from title
-    this.postForm.get('title')?.valueChanges.subscribe(title => {
+    this.postForm.get('title')?.valueChanges.subscribe((title) => {
       if (title && !this.isEditMode()) {
         const slug = this.postsService.generateSlug(title);
         this.postForm.patchValue({ slug }, { emitEvent: false });
@@ -107,7 +135,7 @@ export class PostFormComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading categories:', error);
-      }
+      },
     });
   }
 
@@ -118,14 +146,14 @@ export class PostFormComponent implements OnInit {
       },
       error: (error: any) => {
         console.error('Error loading placements:', error);
-      }
+      },
     });
   }
 
   loadPost(): void {
     const postId = this.postId();
     if (!postId) return;
-    
+
     this.loading.set(true);
     this.postsService.getPost(postId).subscribe({
       next: (post) => {
@@ -136,13 +164,19 @@ export class PostFormComponent implements OnInit {
         console.error('Error loading post:', error);
         this.error.set('Failed to load post. Please try again.');
         this.loading.set(false);
-      }
+      },
     });
   }
 
   populateForm(post: Post): void {
-    const categoryId = typeof post.category === 'string' ? post.category : (post.category as any)?._id;
-    const placementId = typeof post.placement === 'string' ? post.placement : (post.placement as any)?._id;
+    const categoryId =
+      typeof post.category === 'string'
+        ? post.category
+        : (post.category as any)?._id;
+    const placementId =
+      typeof post.placement === 'string'
+        ? post.placement
+        : (post.placement as any)?._id;
 
     this.postForm.patchValue({
       title: post.title,
@@ -153,8 +187,11 @@ export class PostFormComponent implements OnInit {
       category: categoryId || '',
       placement: placementId || '',
       image: (post as any).image || '',
-      publishedAt: post.publishedAt ? this.formatDateForInput(post.publishedAt) : '',
-      expiredAt: post.expiredAt ? this.formatDateForInput(post.expiredAt) : ''
+      orderNo: post.orderNo || 1,
+      publishedAt: post.publishedAt
+        ? this.formatDateForInput(post.publishedAt)
+        : '',
+      expiredAt: post.expiredAt ? this.formatDateForInput(post.expiredAt) : '',
     });
   }
 
@@ -170,7 +207,7 @@ export class PostFormComponent implements OnInit {
     this.success.set('');
 
     const formData = this.prepareFormData();
-    
+
     if (this.isEditMode() && this.postId()) {
       this.updatePost(formData);
     } else {
@@ -180,7 +217,7 @@ export class PostFormComponent implements OnInit {
 
   prepareFormData(): any {
     const rawFormData = this.postForm.value;
-    
+
     // Prepare the data according to DTO requirements
     const formData: any = {
       title: rawFormData.title,
@@ -191,7 +228,10 @@ export class PostFormComponent implements OnInit {
       category: rawFormData.category,
       placement: rawFormData.placement,
       image: rawFormData.image || undefined,
-      expiredAt: rawFormData.expiredAt ? new Date(rawFormData.expiredAt) : new Date()
+      orderNo: rawFormData.orderNo || 1,
+      expiredAt: rawFormData.expiredAt
+        ? new Date(rawFormData.expiredAt)
+        : new Date(),
     };
 
     // Add publishedAt only if it's set
@@ -219,15 +259,17 @@ export class PostFormComponent implements OnInit {
       error: (error) => {
         this.saving.set(false);
         console.error('Error creating post:', error);
-        this.error.set(error.error?.message || 'Failed to create post. Please try again.');
-      }
+        this.error.set(
+          error.error?.message || 'Failed to create post. Please try again.',
+        );
+      },
     });
   }
 
   updatePost(formData: any): void {
     const postId = this.postId();
     if (!postId) return;
-    
+
     this.postsService.updatePost(postId, formData).subscribe({
       next: (post) => {
         this.saving.set(false);
@@ -239,8 +281,10 @@ export class PostFormComponent implements OnInit {
       error: (error) => {
         this.saving.set(false);
         console.error('Error updating post:', error);
-        this.error.set(error.error?.message || 'Failed to update post. Please try again.');
-      }
+        this.error.set(
+          error.error?.message || 'Failed to update post. Please try again.',
+        );
+      },
     });
   }
 
@@ -257,7 +301,7 @@ export class PostFormComponent implements OnInit {
   }
 
   markFormGroupTouched(): void {
-    Object.keys(this.postForm.controls).forEach(key => {
+    Object.keys(this.postForm.controls).forEach((key) => {
       const control = this.postForm.get(key);
       control?.markAsTouched();
     });
@@ -272,9 +316,12 @@ export class PostFormComponent implements OnInit {
     const field = this.postForm.get(fieldName);
     if (field?.touched && field?.errors) {
       const errors = field.errors;
-      if (errors['required']) return `${this.getFieldLabel(fieldName)} is required`;
-      if (errors['minlength']) return `${this.getFieldLabel(fieldName)} must be at least ${errors['minlength'].requiredLength} characters`;
-      if (errors['pattern']) return `${this.getFieldLabel(fieldName)} contains invalid characters`;
+      if (errors['required'])
+        return `${this.getFieldLabel(fieldName)} is required`;
+      if (errors['minlength'])
+        return `${this.getFieldLabel(fieldName)} must be at least ${errors['minlength'].requiredLength} characters`;
+      if (errors['pattern'])
+        return `${this.getFieldLabel(fieldName)} contains invalid characters`;
     }
     return '';
   }
@@ -287,8 +334,9 @@ export class PostFormComponent implements OnInit {
       status: 'Status',
       category: 'Category',
       placement: 'Placement',
+      orderNo: 'Order Number',
       publishedAt: 'Published At',
-      expiredAt: 'Expires At'
+      expiredAt: 'Expires At',
     };
     return labels[fieldName] || fieldName;
   }
@@ -306,19 +354,43 @@ export class PostFormComponent implements OnInit {
   // URL validation helper
   urlValidator(control: any) {
     if (!control.value) return null;
-    const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    const urlPattern =
+      /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
     return urlPattern.test(control.value) ? null : { invalidUrl: true };
   }
 
   // Getter methods for template
-  get title() { return this.postForm.get('title'); }
-  get slug() { return this.postForm.get('slug'); }
-  get excerpt() { return this.postForm.get('excerpt'); }
-  get content() { return this.postForm.get('content'); }
-  get status() { return this.postForm.get('status'); }
-  get category() { return this.postForm.get('category'); }
-  get placement() { return this.postForm.get('placement'); }
-  get image() { return this.postForm.get('image'); }
-  get publishedAt() { return this.postForm.get('publishedAt'); }
-  get expiredAt() { return this.postForm.get('expiredAt'); }
+  get title() {
+    return this.postForm.get('title');
+  }
+  get slug() {
+    return this.postForm.get('slug');
+  }
+  get excerpt() {
+    return this.postForm.get('excerpt');
+  }
+  get content() {
+    return this.postForm.get('content');
+  }
+  get status() {
+    return this.postForm.get('status');
+  }
+  get category() {
+    return this.postForm.get('category');
+  }
+  get placement() {
+    return this.postForm.get('placement');
+  }
+  get image() {
+    return this.postForm.get('image');
+  }
+  get orderNo() {
+    return this.postForm.get('orderNo');
+  }
+  get publishedAt() {
+    return this.postForm.get('publishedAt');
+  }
+  get expiredAt() {
+    return this.postForm.get('expiredAt');
+  }
 }

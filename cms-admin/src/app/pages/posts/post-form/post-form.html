@@ -188,6 +188,32 @@
               <small class="form-text">URL to the main image for this post</small>
             </div>
           </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="orderNo">Order Number <span class="required">*</span></label>
+              <input
+                type="number"
+                id="orderNo"
+                formControlName="orderNo"
+                class="form-control"
+                min="0"
+                placeholder="1"
+                [class.is-invalid]="orderNo?.invalid && orderNo?.touched"
+              >
+              <small class="form-text">Sort order for displaying posts (higher numbers appear first)</small>
+              @if (hasError('orderNo', 'required')) {
+                <div class="invalid-feedback">
+                  Order number is required
+                </div>
+              }
+              @if (hasError('orderNo', 'min')) {
+                <div class="invalid-feedback">
+                  Order number must be 0 or greater
+                </div>
+              }
+            </div>
+          </div>
         </div>
 
         <!-- Publishing Schedule Section -->

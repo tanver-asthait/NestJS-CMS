@@ -11,6 +11,7 @@ export interface Post {
   tags?: string[];
   image?: string;
   viewCount: number;
+  orderNo: number;
   publishedAt: Date;
   expiredAt: Date;
   createdAt: Date;
@@ -21,7 +22,7 @@ export enum PostStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ARCHIVED = 'archived',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
 }
 
 export interface CreatePostDto {
@@ -34,6 +35,7 @@ export interface CreatePostDto {
   placement: string;
   tags?: string[];
   image?: string;
+  orderNo: number;
   publishedAt?: Date;
   expiredAt: Date;
 }
@@ -48,6 +50,7 @@ export interface UpdatePostDto {
   placement?: string;
   tags?: string[];
   image?: string;
+  orderNo: number;
   publishedAt?: Date;
   expiredAt?: Date;
 }

@@ -86,6 +86,7 @@
             <th>Status</th>
             <th>Category</th>
             <th>Placement</th>
+            <th>Order</th>
             <th>Created</th>
             <th>Expires On</th>
             <th>Actions</th>
@@ -120,6 +121,11 @@
             <td>
               <span class="placement-name">
                 {{ getPlacementName(post.placement) }}
+              </span>
+            </td>
+            <td>
+              <span class="order-number">
+                {{ post.orderNo || 0 }}
               </span>
             </td>
             <td>{{ formatDate(post.createdAt) }}</td>

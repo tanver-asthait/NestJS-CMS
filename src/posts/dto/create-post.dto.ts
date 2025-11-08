@@ -1,4 +1,15 @@
-import { IsString, IsNotEmpty, IsOptional, IsEnum, IsArray, IsUrl, IsMongoId, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsArray,
+  IsUrl,
+  IsMongoId,
+  IsDateString,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { PostStatus } from '../schemas/post.schema';
 
 export class CreatePostDto {
@@ -38,6 +49,11 @@ export class CreatePostDto {
   @IsUrl()
   @IsOptional()
   image?: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  @Min(1)
+  orderNo: number;
 
   @IsDateString()
   @IsOptional()

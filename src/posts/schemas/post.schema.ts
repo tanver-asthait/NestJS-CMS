@@ -10,7 +10,7 @@ export enum PostStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
   ARCHIVED = 'archived',
-  EXPIRED = 'expired'
+  EXPIRED = 'expired',
 }
 
 @Schema({
@@ -29,10 +29,10 @@ export class Post {
   @Prop({ required: true })
   content?: string;
 
-  @Prop({ 
-    type: String, 
-    enum: Object.values(PostStatus), 
-    default: PostStatus.DRAFT 
+  @Prop({
+    type: String,
+    enum: Object.values(PostStatus),
+    default: PostStatus.DRAFT,
   })
   status: PostStatus;
 
@@ -53,6 +53,9 @@ export class Post {
 
   @Prop({ default: 0 })
   viewCount: number;
+
+  @Prop({ type: Number, required: true, default: 0 })
+  orderNo: number;
 
   @Prop()
   publishedAt?: Date;
