@@ -419,10 +419,40 @@
                 <div class="endpoint">
                     <div class="endpoint-header">
                         <span class="method get">GET</span>
+                        <span class="endpoint-path">/posts/filter</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Filter published posts by category name and/or placement name</div>
+                        <p><strong>Query Parameters:</strong></p>
+                        <ul>
+                            <li><code>categoryName</code> - Filter by category name (optional)</li>
+                            <li><code>placementName</code> - Filter by placement name (optional)</li>
+                            <li><code>page</code> - Page number (default: 1)</li>
+                            <li><code>limit</code> - Items per page (default: 10)</li>
+                        </ul>
+                        <p><strong>Features:</strong></p>
+                        <ul>
+                            <li>Returns only PUBLISHED posts</li>
+                            <li>Excludes expired posts</li>
+                            <li>Sorted by orderNo (ascending), then publishedAt (descending)</li>
+                        </ul>
+                        <p><strong>Examples:</strong></p>
+                        <ul>
+                            <li><code>/posts/filter?categoryName=Technology</code></li>
+                            <li><code>/posts/filter?placementName=Header Banner</code></li>
+                            <li><code>/posts/filter?categoryName=Technology&placementName=Header Banner</code></li>
+                            <li><code>/posts/filter?categoryName=Technology&page=2&limit=20</code></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
                         <span class="endpoint-path">/posts/category/:categoryId</span>
                     </div>
                     <div class="endpoint-body">
-                        <div class="description">Get posts by category</div>
+                        <div class="description">Get posts by category ID</div>
                     </div>
                 </div>
 
@@ -432,7 +462,28 @@
                         <span class="endpoint-path">/posts/placement/:placementId</span>
                     </div>
                     <div class="endpoint-body">
-                        <div class="description">Get posts by placement</div>
+                        <div class="description">Get posts by placement ID</div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/posts/:id</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get a single post by ID</div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method get">GET</span>
+                        <span class="endpoint-path">/posts/slug/:slug</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Get a single post by slug</div>
+                        <p>Example: <code>/posts/slug/my-post-title</code></p>
                     </div>
                 </div>
 
@@ -454,12 +505,66 @@
   "status": "DRAFT",
   "category": "category_id_here",
   "placement": "placement_id_here",
+  "orderNo": 100,
   "tags": ["technology", "news"],
   "image": "https://example.com/image.jpg",
   "metaTitle": "SEO Title",
   "metaDescription": "SEO Description"
 }</pre>
                         </div>
+                        <p><strong>Required Fields:</strong></p>
+                        <ul>
+                            <li><code>title</code> - Post title</li>
+                            <li><code>slug</code> - URL-friendly identifier (unique)</li>
+                            <li><code>content</code> - Full post content</li>
+                            <li><code>category</code> - Category ID</li>
+                            <li><code>placement</code> - Placement ID</li>
+                            <li><code>orderNo</code> - Display order (number, min: 0, default: 0)</li>
+                            <li><code>status</code> - DRAFT | PUBLISHED | ARCHIVED</li>
+                        </ul>
+                        <p><strong>Note:</strong> Posts are sorted by <code>orderNo</code> (ascending) first, then by <code>publishedAt</code> (descending). Lower orderNo values appear first.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method patch">PATCH</span>
+                        <span class="endpoint-path">/posts/:id</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Update a post</div>
+                        <div class="sample-request">
+                            <h4>Sample Request:</h4>
+                            <pre>{
+  "title": "Updated Post Title",
+  "status": "PUBLISHED",
+  "orderNo": 200
+}</pre>
+                        </div>
+                        <p><strong>Note:</strong> All fields are optional. Only include fields you want to update.</p>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method delete">DELETE</span>
+                        <span class="endpoint-path">/posts/:id</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="auth-required">🔒 Requires Authentication</div>
+                        <div class="description">Delete a post</div>
+                    </div>
+                </div>
+
+                <div class="endpoint">
+                    <div class="endpoint-header">
+                        <span class="method patch">PATCH</span>
+                        <span class="endpoint-path">/posts/:id/view</span>
+                    </div>
+                    <div class="endpoint-body">
+                        <div class="description">Increment post view count</div>
+                        <p><strong>Note:</strong> No authentication required. Used to track post views.</p>
                     </div>
                 </div>
             </div>
