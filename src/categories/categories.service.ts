@@ -6,7 +6,9 @@ import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
 
 @Injectable()
 export class CategoriesService {
-  constructor(@InjectModel(Category.name) private categoryModel: Model<CategoryDocument>) {}
+  constructor(
+    @InjectModel(Category.name) private categoryModel: Model<CategoryDocument>,
+  ) {}
 
   async create(createCategoryDto: CreateCategoryDto): Promise<Category> {
     const createdCategory = new this.categoryModel(createCategoryDto);
@@ -25,8 +27,10 @@ export class CategoriesService {
     return category;
   }
 
-  async findByName(name: string): Promise<Category | null> {
-    return this.categoryModel.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } }).exec();
+  async findByName(name: string): Promise<CategoryDocument | null> {
+    return this.categoryModel
+      .findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } })
+      .exec();
   }
 
   async incrementPostCount(id: string): Promise<void> {
@@ -41,15 +45,18 @@ export class CategoriesService {
       .exec();
   }
 
-  async update(id: string, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+  async update(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<Category> {
     const updatedCategory = await this.categoryModel
       .findByIdAndUpdate(id, updateCategoryDto, { new: true })
       .exec();
-    
+
     if (!updatedCategory) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
-    
+
     return updatedCategory;
   }
 

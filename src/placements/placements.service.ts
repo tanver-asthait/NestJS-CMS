@@ -7,7 +7,8 @@ import { CreatePlacementDto, UpdatePlacementDto } from './dto/placement.dto';
 @Injectable()
 export class PlacementsService {
   constructor(
-    @InjectModel(Placement.name) private placementModel: Model<PlacementDocument>,
+    @InjectModel(Placement.name)
+    private placementModel: Model<PlacementDocument>,
   ) {}
 
   async create(createPlacementDto: CreatePlacementDto): Promise<Placement> {
@@ -23,10 +24,7 @@ export class PlacementsService {
   }
 
   async findAllWithInactive(): Promise<Placement[]> {
-    return this.placementModel
-      .find()
-      .sort({ sortOrder: 1, name: 1 })
-      .exec();
+    return this.placementModel.find().sort({ sortOrder: 1, name: 1 }).exec();
   }
 
   async findOne(id: string): Promise<Placement> {
@@ -45,8 +43,10 @@ export class PlacementsService {
     return placement;
   }
 
-  async findByName(name: string): Promise<Placement | null> {
-    return this.placementModel.findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } }).exec();
+  async findByName(name: string): Promise<PlacementDocument | null> {
+    return this.placementModel
+      .findOne({ name: { $regex: new RegExp('^' + name + '$', 'i') } })
+      .exec();
   }
 
   async findBySubCategory(subCategory: string): Promise<Placement[]> {
@@ -56,15 +56,18 @@ export class PlacementsService {
       .exec();
   }
 
-  async update(id: string, updatePlacementDto: UpdatePlacementDto): Promise<Placement> {
+  async update(
+    id: string,
+    updatePlacementDto: UpdatePlacementDto,
+  ): Promise<Placement> {
     const updatedPlacement = await this.placementModel
       .findByIdAndUpdate(id, updatePlacementDto, { new: true })
       .exec();
-    
+
     if (!updatedPlacement) {
       throw new NotFoundException(`Placement with ID ${id} not found`);
     }
-    
+
     return updatedPlacement;
   }
 

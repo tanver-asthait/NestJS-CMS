@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Post, PostDocument, PostStatus } from './schemas/post.schema';
@@ -35,24 +39,34 @@ export class PostsService {
   async create(createPostDto: CreatePostDto, authorId: string): Promise<Post> {
     console.log('Creating post with authorId:', authorId); // Debug log
     console.log('CreatePostDto:', createPostDto); // Debug log
-    
+
     if (!authorId) {
       throw new ConflictException('Author ID is required');
     }
 
+    if (!createPostDto.placement) {
+      throw new ConflictException('Placement ID is required');
+    }
+
+    if (!createPostDto.category) {
+      throw new ConflictException('Category ID is required');
+    }
+
     // Check if slug already exists
-    const existingPost = await this.postModel.findOne({ slug: createPostDto.slug });
+    const existingPost = await this.postModel.findOne({
+      slug: createPostDto.slug,
+    });
     if (existingPost) {
       throw new ConflictException('Post with this slug already exists');
     }
 
     const createdPost = new this.postModel({
       ...createPostDto,
-      author: authorId,
+      author: new Types.ObjectId(authorId),
+      placement: new Types.ObjectId(createPostDto.placement),
+      category: new Types.ObjectId(createPostDto.category),
     });
-    
-    console.log('Post object before save:', createdPost); // Debug log
-    
+
     // Set publishedAt if status is published
     if (createPostDto.status === PostStatus.PUBLISHED) {
       createdPost.publishedAt = new Date();
@@ -70,26 +84,19 @@ export class PostsService {
   }
 
   async findAll(queryParams: PostQueryParams = {}): Promise<PostsResponse> {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      author,
-      search,
-      tags,
-    } = queryParams;
+    const { page = 1, limit = 10, status, author, search, tags } = queryParams;
 
     // Build filter object
     const filter: any = {};
-    
+
     if (status) {
       filter.status = status;
     }
-    
+
     if (author) {
       filter.author = author;
     }
-    
+
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -97,13 +104,13 @@ export class PostsService {
         { excerpt: { $regex: search, $options: 'i' } },
       ];
     }
-    
+
     if (tags && tags.length > 0) {
       filter.tags = { $in: tags };
     }
 
     const skip = (page - 1) * limit;
-    
+
     const [posts, total] = await Promise.all([
       this.postModel
         .find(filter)
@@ -138,11 +145,20 @@ export class PostsService {
       .exec();
   }
 
-  async findByFilters(categoryName?: string, placementName?: string, queryParams: PostQueryParams = {}): Promise<PostsResponse> {
-    const {
-      page = 1,
-      limit = 10,
-    } = queryParams;
+  async findByFilters(
+    categoryName?: string,
+    placementName?: string,
+    queryParams: PostQueryParams = {},
+  ): Promise<PostsResponse> {
+    const { page = 1, limit = 10 } = queryParams;
+
+    const returnedData: PostsResponse = {
+      posts: [],
+      total: 0,
+      page,
+      limit,
+      totalPages: 0,
+    };
 
     // Build filter object for published and not expired posts
     const filter: any = {
@@ -150,119 +166,45 @@ export class PostsService {
       $or: [
         { expiredAt: { $exists: false } },
         { expiredAt: null },
-        { expiredAt: { $gt: new Date() } }
-      ]
+        { expiredAt: { $gt: new Date() } },
+      ],
     };
 
     // If category name is provided, find category by name and filter by it
     if (categoryName) {
       const category = await this.categoriesService.findByName(categoryName);
-      console.log('Found category for filtering:', category); // Debug log
       if (category) {
-        filter.category = (category as any)._id.toString();
-        console.log('Category ID added to filter:', filter.category); // Debug log
+        // Use ObjectId for faster queries (works with both ObjectId and string in DB)
+        filter.category = category._id;
       } else {
-        console.log('Category not found with name:', categoryName); // Debug log
-        // If category not found, return empty result
-        return {
-          posts: [],
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-        };
+        return returnedData;
       }
     }
 
     // If placement name is provided, find placement by name and filter by it
     if (placementName) {
       const placement = await this.placementsService.findByName(placementName);
-      console.log('Found placement for filtering:', placement); // Debug log
       if (placement) {
-        filter.placement = (placement as any)._id.toString();
-        console.log('Placement ID added to filter:', filter.placement); // Debug log
+        filter.placement = placement._id;
       } else {
-        console.log('Placement not found with name:', placementName); // Debug log
-        // If placement not found, return empty result
-        return {
-          posts: [],
-          total: 0,
-          page,
-          limit,
-          totalPages: 0,
-        };
+        return returnedData;
       }
     }
 
     const skip = (page - 1) * limit;
-    console.log('Filter for findByFilters:', JSON.stringify(filter)); // Debug log
-    
-    // Let's also debug by checking all published posts without category/placement filter
-    const basicFilter = {
-      status: PostStatus.PUBLISHED,
-      $or: [
-        { expiredAt: { $exists: false } },
-        { expiredAt: null },
-        { expiredAt: { $gt: new Date() } }
-      ]
-    };
-    
-    const allPublishedPosts = await this.postModel.find(basicFilter).exec();
-    console.log('All published non-expired posts:', allPublishedPosts.length);
-    console.log('First few posts categories/placements:', 
-      allPublishedPosts.slice(0, 3).map(p => ({ 
-        id: p._id, 
-        category: p.category, 
-        placement: p.placement,
-        categoryType: typeof p.category,
-        placementType: typeof p.placement
-      }))
-    );
 
-    // Test the exact filter step by step
-    console.log('Testing filter step by step...');
-    const statusOnlyFilter = { status: PostStatus.PUBLISHED };
-    const statusOnlyCount = await this.postModel.countDocuments(statusOnlyFilter);
-    console.log('Posts with status published:', statusOnlyCount);
-
-    const withExpiryFilter = {
-      status: PostStatus.PUBLISHED,
-      $or: [
-        { expiredAt: { $exists: false } },
-        { expiredAt: null },
-        { expiredAt: { $gt: new Date() } }
-      ]
-    };
-    const withExpiryCount = await this.postModel.countDocuments(withExpiryFilter);
-    console.log('Posts with status published and not expired:', withExpiryCount);
-
-    if (categoryName && filter.category) {
-      const withCategoryFilter = { ...withExpiryFilter, category: filter.category };
-      const withCategoryCount = await this.postModel.countDocuments(withCategoryFilter);
-      console.log('Posts with category filter added:', withCategoryCount);
-    }
-
-    if (placementName && filter.placement) {
-      const fullFilter = { ...filter };
-      const fullFilterCount = await this.postModel.countDocuments(fullFilter);
-      console.log('Posts with full filter:', fullFilterCount);
-    }
-    
     const [posts, total] = await Promise.all([
       this.postModel
         .find(filter)
         .populate('author', 'firstName lastName email')
-        .populate('category', 'name slug color')
-        .populate('placement', 'name slug subCategory color')
-        .sort({ publishedAt: -1 })
+        .populate('category', 'name slug')
+        .populate('placement', 'name slug')
+        .sort({ orderNo: 1, publishedAt: -1 })
         .skip(skip)
         .limit(limit)
         .exec(),
       this.postModel.countDocuments(filter),
     ]);
-
-    console.log('Posts found:', posts.length); // Debug log
-    console.log('Total count:', total); // Debug log
 
     const totalPages = Math.ceil(total / limit);
 
@@ -277,12 +219,15 @@ export class PostsService {
 
   async getDebugCategories() {
     const categories = await this.categoriesService.findAll();
-    return categories.map(cat => ({ id: (cat as any)._id, name: cat.name }));
+    return categories.map((cat) => ({ id: (cat as any)._id, name: cat.name }));
   }
 
   async getDebugPlacements() {
     const placements = await this.placementsService.findAll();
-    return placements.map(place => ({ id: (place as any)._id, name: place.name }));
+    return placements.map((place) => ({
+      id: (place as any)._id,
+      name: place.name,
+    }));
   }
 
   async findOne(id: string): Promise<Post> {
@@ -292,7 +237,7 @@ export class PostsService {
       .populate('category', 'name slug color')
       .populate('placement', 'name slug subCategory color')
       .exec();
-    
+
     if (!post) {
       throw new NotFoundException(`Post with ID ${id} not found`);
     }
@@ -306,14 +251,18 @@ export class PostsService {
       .populate('category', 'name slug color')
       .populate('placement', 'name slug subCategory color')
       .exec();
-    
+
     if (!post) {
       throw new NotFoundException(`Post with slug ${slug} not found`);
     }
     return post;
   }
 
-  async update(id: string, updatePostDto: UpdatePostDto, currentUserId?: string): Promise<Post> {
+  async update(
+    id: string,
+    updatePostDto: UpdatePostDto,
+    currentUserId?: string,
+  ): Promise<Post> {
     // Get the existing post first to compare category/placement changes
     const existingPost = await this.postModel.findById(id).exec();
     if (!existingPost) {
@@ -326,12 +275,24 @@ export class PostsService {
     // }
 
     // If status is being changed to published and publishedAt is not set
-    if (updatePostDto.status === PostStatus.PUBLISHED && !updatePostDto.publishedAt) {
+    if (
+      updatePostDto.status === PostStatus.PUBLISHED &&
+      !updatePostDto.publishedAt
+    ) {
       updatePostDto.publishedAt = new Date();
     }
 
+    // Convert category and placement to ObjectId if provided
+    const updateData: any = { ...updatePostDto };
+    if (updatePostDto.category) {
+      updateData.category = new Types.ObjectId(updatePostDto.category);
+    }
+    if (updatePostDto.placement) {
+      updateData.placement = new Types.ObjectId(updatePostDto.placement);
+    }
+
     const updatedPost = await this.postModel
-      .findByIdAndUpdate(id, updatePostDto, { new: true })
+      .findByIdAndUpdate(id, updateData, { new: true })
       .populate('author', 'firstName lastName email')
       .populate('category', 'name slug color')
       .populate('placement', 'name slug subCategory color')
@@ -343,18 +304,28 @@ export class PostsService {
 
     // Handle category/placement count updates if they changed
     const promises: Promise<void>[] = [];
-    
-    if (updatePostDto.category && updatePostDto.category !== existingPost.category.toString()) {
+
+    if (
+      updatePostDto.category &&
+      updatePostDto.category !== existingPost.category.toString()
+    ) {
       promises.push(
-        this.categoriesService.decrementPostCount(existingPost.category.toString()),
-        this.categoriesService.incrementPostCount(updatePostDto.category)
+        this.categoriesService.decrementPostCount(
+          existingPost.category.toString(),
+        ),
+        this.categoriesService.incrementPostCount(updatePostDto.category),
       );
     }
-    
-    if (updatePostDto.placement && updatePostDto.placement !== existingPost.placement.toString()) {
+
+    if (
+      updatePostDto.placement &&
+      updatePostDto.placement !== existingPost.placement.toString()
+    ) {
       promises.push(
-        this.placementsService.decrementPostCount(existingPost.placement.toString()),
-        this.placementsService.incrementPostCount(updatePostDto.placement)
+        this.placementsService.decrementPostCount(
+          existingPost.placement.toString(),
+        ),
+        this.placementsService.incrementPostCount(updatePostDto.placement),
       );
     }
 
@@ -397,22 +368,19 @@ export class PostsService {
     return updatedPost;
   }
 
-  async findByAuthor(authorId: string, queryParams: PostQueryParams = {}): Promise<PostsResponse> {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      search,
-      tags,
-    } = queryParams;
+  async findByAuthor(
+    authorId: string,
+    queryParams: PostQueryParams = {},
+  ): Promise<PostsResponse> {
+    const { page = 1, limit = 10, status, search, tags } = queryParams;
 
     // Build filter object
     const filter: any = { author: authorId };
-    
+
     if (status) {
       filter.status = status;
     }
-    
+
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -420,13 +388,13 @@ export class PostsService {
         { excerpt: { $regex: search, $options: 'i' } },
       ];
     }
-    
+
     if (tags && tags.length > 0) {
       filter.tags = { $in: tags };
     }
 
     const skip = (page - 1) * limit;
-    
+
     const [posts, total] = await Promise.all([
       this.postModel
         .find(filter)
@@ -451,26 +419,23 @@ export class PostsService {
     };
   }
 
-  async findByTag(tag: string, queryParams: PostQueryParams = {}): Promise<PostsResponse> {
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      author,
-      search,
-    } = queryParams;
+  async findByTag(
+    tag: string,
+    queryParams: PostQueryParams = {},
+  ): Promise<PostsResponse> {
+    const { page = 1, limit = 10, status, author, search } = queryParams;
 
     // Build filter object
     const filter: any = { tags: { $in: [tag] } };
-    
+
     if (status) {
       filter.status = status;
     }
-    
+
     if (author) {
       filter.author = author;
     }
-    
+
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
@@ -480,7 +445,7 @@ export class PostsService {
     }
 
     const skip = (page - 1) * limit;
-    
+
     const [posts, total] = await Promise.all([
       this.postModel
         .find(filter)

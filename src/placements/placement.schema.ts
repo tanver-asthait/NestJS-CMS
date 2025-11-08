@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, HydratedDocument } from 'mongoose';
 
-export type PlacementDocument = Placement & Document;
+// Use HydratedDocument for proper TypeScript typing with _id
+export type PlacementDocument = HydratedDocument<Placement>;
 
 export enum SubCategory {
   TOPNAV = 'topnav',
@@ -24,9 +25,9 @@ export class Placement {
   @Prop({ required: true, unique: true })
   slug: string;
 
-  @Prop({ 
-    type: String, 
-    enum: SubCategory
+  @Prop({
+    type: String,
+    enum: SubCategory,
   })
   subCategory?: SubCategory;
 

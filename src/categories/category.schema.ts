@@ -1,7 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types, HydratedDocument } from 'mongoose';
 
-export type CategoryDocument = Category & Document;
+// Use HydratedDocument for proper TypeScript typing with _id
+export type CategoryDocument = HydratedDocument<Category>;
 
 export enum SubCategory {
   TOPNAV = 'topnav',
