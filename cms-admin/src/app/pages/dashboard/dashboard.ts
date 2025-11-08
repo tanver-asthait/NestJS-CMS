@@ -1,7 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import {
+  DashboardService,
+  DashboardStats,
+} from '../../services/dashboard.service';
+import { Post } from '../../models/post.model';
+import { User } from '../../models/user.model';
+import { Category } from '../../models/category.model';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,39 +17,99 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
-  user: any = null;
+  private authService = inject(AuthService);
+  private dashboardService = inject(DashboardService);
+  private router = inject(Router);
+
+  // Signals
+  loading = signal(false);
+  error = signal<string | null>(null);
+  stats = signal<DashboardStats>({
+    totalPosts: 0,
+    publishedPosts: 0,
+    draftPosts: 0,
+    totalUsers: 0,
+    totalCategories: 0,
+    totalPlacements: 0,
+  });
+  recentPosts = signal<Post[]>([]);
+  recentUsers = signal<User[]>([]);
+  topCategories = signal<Category[]>([]);
+
+  // Computed
+  user = computed(() => {
+    let currentUser: any = null;
+    this.authService.currentUser$.subscribe((u) => (currentUser = u));
+    return currentUser;
+  });
+
   currentDate = new Date();
 
-  // Dashboard stats (mock data for now)
-  stats = {
-    totalPosts: 25,
-    totalUsers: 12,
-    totalCategories: 8,
-    totalViews: 1250
-  };
-
-  // Recent activities (mock data)
-  recentActivities = [
-    { action: 'New post created', details: 'Getting Started with Angular', time: '2 minutes ago' },
-    { action: 'User registered', details: 'john.doe@example.com', time: '15 minutes ago' },
-    { action: 'Post published', details: 'NestJS Best Practices', time: '1 hour ago' },
-    { action: 'Category created', details: 'Technology', time: '2 hours ago' }
-  ];
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
-
   ngOnInit(): void {
-    // Get current user information
-    this.authService.currentUser$.subscribe(user => {
-      this.user = user;
+    this.loadDashboardData();
+  }
+
+  loadDashboardData(): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.dashboardService.getDashboardData().subscribe({
+      next: (data) => {
+        this.stats.set(data.stats);
+        this.recentPosts.set(data.recentPosts);
+        this.recentUsers.set(data.recentUsers);
+        this.topCategories.set(data.topCategories);
+        this.loading.set(false);
+      },
+      error: (err) => {
+        console.error('Error loading dashboard data:', err);
+        this.error.set('Failed to load dashboard data. Please try again.');
+        this.loading.set(false);
+      },
     });
   }
 
   navigateTo(route: string): void {
-    // Navigate to the specified route
     this.router.navigate([route]);
+  }
+
+  formatDate(date: Date | string): string {
+    if (!date) return 'N/A';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+
+  getStatusBadgeClass(status: string): string {
+    switch (status?.toLowerCase()) {
+      case 'published':
+        return 'badge-success';
+      case 'draft':
+        return 'badge-warning';
+      case 'archived':
+        return 'badge-secondary';
+      case 'expired':
+        return 'badge-danger';
+      default:
+        return 'badge-secondary';
+    }
+  }
+
+  getRoleBadgeClass(role: string): string {
+    switch (role?.toLowerCase()) {
+      case 'admin':
+        return 'badge-danger';
+      case 'editor':
+        return 'badge-primary';
+      case 'author':
+        return 'badge-info';
+      case 'viewer':
+        return 'badge-secondary';
+      default:
+        return 'badge-secondary';
+    }
   }
 }

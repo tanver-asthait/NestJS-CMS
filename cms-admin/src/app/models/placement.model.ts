@@ -19,8 +19,8 @@ export interface Placement {
   isActive?: boolean;
   postCount?: number;
   sortOrder?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface CreatePlacementDto {

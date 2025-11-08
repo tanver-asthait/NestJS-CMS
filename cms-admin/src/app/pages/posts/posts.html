@@ -17,8 +17,8 @@
     <form [formGroup]="filterForm" class="filters-form">
       <div class="filter-group">
         <label for="search">Search</label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           id="search"
           formControlName="search"
           placeholder="Search posts by title, content..."
@@ -37,8 +37,8 @@
 
       <div class="filter-group">
         <label for="author">Author ID</label>
-        <input 
-          type="text" 
+        <input
+          type="text"
           id="author"
           formControlName="author"
           placeholder="Filter by author ID..."
@@ -130,28 +130,20 @@
             </td>
             <td>
               <div class="action-buttons">
-                <button 
-                  class="btn btn-sm btn-info" 
-                  (click)="onViewPost(post)"
-                  title="View Post"
-                >
-                  <i class="fas fa-eye">View</i>
-                </button>
-                <button 
-                  *ngIf="canEditPost(post)"
-                  class="btn btn-sm btn-warning" 
+                <button
+                  class="btn btn-sm btn-info"
                   (click)="onEditPost(post)"
                   title="Edit Post"
                 >
-                  <i class="fas fa-edit">Edit</i>
+                  <i class="bi bi-pencil"></i>
                 </button>
-                <button 
+                <button
                   *ngIf="canDeletePost(post)"
-                  class="btn btn-sm btn-danger" 
+                  class="btn btn-sm btn-danger"
                   (click)="onDeletePost(post)"
                   title="Delete Post"
                 >
-                  <i class="fas fa-trash">Delete</i>
+                  <i class="bi bi-trash"></i>
                 </button>
               </div>
             </td>
@@ -168,10 +160,10 @@
       <div class="pagination-info">
         Showing {{ (currentPage - 1) * pageSize + 1 }} to {{ getMaxPage() }} of {{ totalPosts }} posts
       </div>
-      
+
       <nav class="pagination-nav">
-        <button 
-          class="btn btn-pagination" 
+        <button
+          class="btn btn-pagination"
           [disabled]="currentPage === 1"
           (click)="onPageChange(currentPage - 1)"
         >
@@ -180,8 +172,8 @@
         </button>
 
         <div class="page-numbers">
-          <button 
-            *ngFor="let page of getPaginationNumbers()" 
+          <button
+            *ngFor="let page of getPaginationNumbers()"
             class="btn btn-page"
             [ngClass]="{ 'active': page === currentPage, 'dots': page === -1 }"
             [disabled]="page === -1"
@@ -191,8 +183,8 @@
           </button>
         </div>
 
-        <button 
-          class="btn btn-pagination" 
+        <button
+          class="btn btn-pagination"
           [disabled]="currentPage === totalPages"
           (click)="onPageChange(currentPage + 1)"
         >

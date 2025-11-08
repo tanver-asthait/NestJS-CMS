@@ -28,7 +28,7 @@
           placeholder="Search by name or description..."
         >
       </div>
-      
+
       <div class="filter-actions">
         <button type="button" class="btn btn-secondary" (click)="clearFilters()">
           <i class="fas fa-times"></i>
@@ -113,29 +113,22 @@
                 </td>
                 <td class="category-actions">
                   <div class="action-buttons">
-                    <button 
-                      class="btn btn-sm btn-info"
-                      (click)="onViewCategory(category)"
-                      title="View Category"
-                    >
-                      <i class="fas fa-eye"></i>
-                    </button>
                     @if (canEditCategory()) {
-                      <button 
-                        class="btn btn-sm btn-warning"
+                      <button
+                        class="btn btn-sm btn-info"
                         (click)="onEditCategory(category)"
                         title="Edit Category"
                       >
-                        <i class="fas fa-edit"></i>
+                        <i class="bi bi-pencil"></i>
                       </button>
                     }
                     @if (canDeleteCategory()) {
-                      <button 
+                      <button
                         class="btn btn-sm btn-danger"
                         (click)="onDeleteCategory(category)"
                         title="Delete Category"
                       >
-                        <i class="fas fa-trash"></i>
+                        <i class="bi bi-trash"></i>
                       </button>
                     }
                   </div>
@@ -151,9 +144,9 @@
             <div class="pagination-info">
               Showing {{ (currentPage() - 1) * pageSize() + 1 }} to {{ maxPage() }} of {{ totalCategories() }} categories
             </div>
-            
+
             <div class="pagination-nav">
-              <button 
+              <button
                 class="btn btn-pagination"
                 (click)="onPageChange(currentPage() - 1)"
                 [disabled]="currentPage() === 1"
@@ -164,7 +157,7 @@
 
               <div class="page-numbers">
                 @for (page of paginationNumbers(); track page) {
-                  <button 
+                  <button
                     class="btn btn-page"
                     [class.active]="page === currentPage()"
                     [class.dots]="page === -1"
@@ -176,7 +169,7 @@
                 }
               </div>
 
-              <button 
+              <button
                 class="btn btn-pagination"
                 (click)="onPageChange(currentPage() + 1)"
                 [disabled]="currentPage() === totalPages()"
