@@ -105,13 +105,23 @@ Authorization: Bearer {{token}}
 
 ### === Posts ===
 
-### Get All Posts
+### Get All Posts (with pagination and filters)
 GET {{baseUrl}}/posts?page=1&limit=10&status=PUBLISHED
 
-### Get Posts by Category
+### Get Posts Filtered by Category and/or Placement
+# Filter by category name
+GET {{baseUrl}}/posts/filter?categoryName=Technology
+
+# Filter by placement name
+GET {{baseUrl}}/posts/filter?placementName=Header Banner
+
+# Filter by both category and placement
+GET {{baseUrl}}/posts/filter?categoryName=Technology&placementName=Header Banner&page=1&limit=10
+
+### Get Posts by Category ID
 GET {{baseUrl}}/posts/category/category_id_here
 
-### Get Posts by Placement
+### Get Posts by Placement ID
 GET {{baseUrl}}/posts/placement/placement_id_here
 
 ### Get Posts by Author
@@ -141,6 +151,7 @@ Authorization: Bearer {{token}}
   "placement": "placement_id_here",
   "tags": ["technology", "news"],
   "image": "https://example.com/image.jpg",
+  "orderNo": 100,
   "metaTitle": "SEO Title",
   "metaDescription": "SEO Description"
 }
@@ -153,7 +164,8 @@ Authorization: Bearer {{token}}
 {
   "title": "Updated Post Title",
   "status": "PUBLISHED",
-  "content": "Updated content"
+  "content": "Updated content",
+  "orderNo": 200
 }
 
 ### Delete Post
