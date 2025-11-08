@@ -1,0 +1,344 @@
+<div class="users-container">
+  <!-- Page Header -->
+  <div class="page-header">
+    <div class="header-content">
+      <h1>User Management</h1>
+      <p>Manage users, roles, and permissions (Admin Only)</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="bi bi-plus-circle"></i>
+        <span>Add New User</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="filters-form">
+      <div class="filter-group">
+        <label>Search Users</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Search by name or email..."
+          [value]="searchTerm()"
+          (input)="searchTerm.set($any($event.target).value)"
+        />
+      </div>
+
+      <div class="filter-group">
+        <label>Role</label>
+        <select
+          class="form-control"
+          [value]="selectedRole()"
+          (change)="selectedRole.set($any($event.target).value)"
+        >
+          <option value="">All Roles</option>
+          @for (role of roles; track role) {
+            <option [value]="role">{{ role }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-secondary" (click)="applyFilters()">
+          <i class="bi bi-funnel"></i> Apply
+        </button>
+        <button class="btn btn-outline" (click)="clearFilters()">
+          <i class="bi bi-x-circle"></i> Clear
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Alert -->
+  @if (error()) {
+    <div class="alert alert-danger">
+      <i class="bi bi-exclamation-triangle"></i>
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading users...</p>
+    </div>
+  }
+
+  <!-- Users Table -->
+  @if (!loading() && hasUsers()) {
+    <div class="users-table-container">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of users(); track user._id) {
+            <tr>
+              <td>
+                <div class="user-info">
+                  <div class="user-avatar">
+                    {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
+                  </div>
+                  <div>
+                    <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>{{ formatDate(user.createdAt) }}</td>
+              <td>
+                <div class="action-buttons">
+                  <button
+                    class="btn btn-sm btn-info"
+                    (click)="openEditModal(user)"
+                    title="Edit User"
+                  >
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button
+                    class="btn btn-sm btn-danger"
+                    (click)="confirmDelete(user)"
+                    title="Delete User"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <!-- @if (totalPages() > 1) {
+        <div class="pagination-container">
+          <div class="pagination-info">
+            Showing {{ (currentPage() - 1) * pageSize() + 1 }} to
+            {{ Math.min(currentPage() * pageSize(), totalUsers()) }} of
+            {{ totalUsers() }} users
+          </div>
+
+          <div class="pagination-nav">
+            <button
+              class="btn btn-pagination"
+              [disabled]="currentPage() === 1"
+              (click)="goToPage(currentPage() - 1)"
+            >
+              <i class="bi bi-chevron-left"></i> Previous
+            </button>
+
+            <div class="page-numbers">
+              @for (page of getPageNumbers(); track page) {
+                @if (page === -1) {
+                  <button class="btn-page dots" disabled>...</button>
+                } @else {
+                  <button
+                    class="btn-page"
+                    [class.active]="page === currentPage()"
+                    (click)="goToPage(page)"
+                  >
+                    {{ page }}
+                  </button>
+                }
+              }
+            </div>
+
+            <button
+              class="btn btn-pagination"
+              [disabled]="currentPage() === totalPages()"
+              (click)="goToPage(currentPage() + 1)"
+            >
+              Next <i class="bi bi-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      } -->
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && !hasUsers()) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="bi bi-people"></i>
+      </div>
+      <h3>No Users Found</h3>
+      <p>There are no users matching your criteria.</p>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="bi bi-plus-circle"></i> Create First User
+      </button>
+    </div>
+  }
+</div>
+
+<!-- Create/Edit Modal -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>
+          @if (modalMode() === 'create') {
+            Create New User
+          } @else {
+            Edit User
+          }
+        </h2>
+        <button class="btn-close" (click)="closeModal()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <form (ngSubmit)="submitForm()">
+          <div class="form-row">
+            <div class="form-group">
+              <label>First Name *</label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="formErrors()['firstName']"
+                [value]="formData().firstName"
+                (input)="updateFormData('firstName', $any($event.target).value)"
+                placeholder="Enter first name"
+              />
+              @if (formErrors()['firstName']) {
+                <div class="invalid-feedback">{{ formErrors()['firstName'] }}</div>
+              }
+            </div>
+
+            <div class="form-group">
+              <label>Last Name *</label>
+              <input
+                type="text"
+                class="form-control"
+                [class.is-invalid]="formErrors()['lastName']"
+                [value]="formData().lastName"
+                (input)="updateFormData('lastName', $any($event.target).value)"
+                placeholder="Enter last name"
+              />
+              @if (formErrors()['lastName']) {
+                <div class="invalid-feedback">{{ formErrors()['lastName'] }}</div>
+              }
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input
+              type="email"
+              class="form-control"
+              [class.is-invalid]="formErrors()['email']"
+              [value]="formData().email"
+              (input)="updateFormData('email', $any($event.target).value)"
+              placeholder="user@example.com"
+            />
+            @if (formErrors()['email']) {
+              <div class="invalid-feedback">{{ formErrors()['email'] }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>
+              Password
+              @if (modalMode() === 'create') {
+                *
+              } @else {
+                (leave blank to keep current)
+              }
+            </label>
+            <input
+              type="password"
+              class="form-control"
+              [class.is-invalid]="formErrors()['password']"
+              [value]="formData().password"
+              (input)="updateFormData('password', $any($event.target).value)"
+              placeholder="Enter password"
+            />
+            @if (formErrors()['password']) {
+              <div class="invalid-feedback">{{ formErrors()['password'] }}</div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label>Role *</label>
+            <select
+              class="form-control"
+              [value]="formData().role"
+              (change)="updateFormData('role', $any($event.target).value)"
+            >
+              @for (role of roles; track role) {
+                <option [value]="role">{{ role }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="closeModal()" [disabled]="submitting()">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+              @if (submitting()) {
+                <span class="spinner"></span>
+                Saving...
+              } @else {
+                @if (modalMode() === 'create') {
+                  Create User
+                } @else {
+                  Update User
+                }
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Delete Confirmation Modal -->
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-content modal-sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Confirm Delete</h2>
+        <button class="btn-close" (click)="cancelDelete()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p>Are you sure you want to delete <strong>{{ userToDelete()?.firstName }} {{ userToDelete()?.lastName }}</strong>?</p>
+        <p class="text-danger">This action cannot be undone.</p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelDelete()" [disabled]="deleting()">
+          Cancel
+        </button>
+        <button class="btn btn-danger" (click)="deleteUser()" [disabled]="deleting()">
+          @if (deleting()) {
+            <span class="spinner"></span>
+            Deleting...
+          } @else {
+            Delete User
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,146 @@
+<div class="placements-container">
+  <div class="page-header">
+    <div class="header-content">
+      <h1>Placements Management</h1>
+      <p>Manage content placements and their subcategories</p>
+    </div>
+    <div class="header-actions">
+      @if (canCreatePlacement()) {
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="onCreatePlacement()"
+        >
+          <i class="bi bi-plus"></i>
+          Create Placement
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <form [formGroup]="filterForm" class="filters-form">
+      <div class="filter-group">
+        <label for="subCategory">Subcategory</label>
+        <select id="subCategory" formControlName="subCategory" class="form-control">
+          <option value="">All Subcategories</option>
+          @for (option of getSubCategoryOptions(); track option.value) {
+            <option [value]="option.value">{{ option.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="onClearFilters()"
+        >
+          <i class="bi bi-x"></i>
+          Clear
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Loading placements...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && placements() && placements().length === 0) {
+    <div class="empty-state">
+      <div class="empty-icon">
+        <i class="bi bi-folder"></i>
+      </div>
+      <h3>No placements found</h3>
+      <p>No placements match your current filters.</p>
+      @if (canCreatePlacement()) {
+        <button
+          class="btn btn-primary"
+          (click)="onCreatePlacement()"
+        >
+          Create First Placement
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Placements Table -->
+  @if (!loading() && placements() && placements().length > 0) {
+    <div class="placements-table-container">
+      <table class="placements-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Subcategory</th>
+            <th>Description</th>
+            <th>Sort Order</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (placement of placements(); track placement._id) {
+            <tr>
+              <td>
+                <div class="placement-info">
+                  <div class="placement-name">{{ placement.name }}</div>
+                </div>
+              </td>
+              <td>
+                <span class="placement-subcategory">
+                  {{ getSubCategoryDisplayName(placement.subCategory) }}
+                </span>
+              </td>
+              <td>
+                @if (placement.description) {
+                  <span>{{ placement.description }}</span>
+                } @else {
+                  <span class="text-muted">No description</span>
+                }
+              </td>
+              <td>{{ placement.sortOrder || 0 }}</td>
+              <td>
+                @if (placement.isActive !== false) {
+                  <span class="badge badge-success">Active</span>
+                } @else {
+                  <span class="badge badge-secondary">Inactive</span>
+                }
+              </td>
+              <td>{{ formatDate(placement.createdAt) }}</td>
+              <td>
+                <div class="action-buttons">
+                  @if (canEditPlacement()) {
+                    <button
+                      class="btn btn-sm btn-info"
+                      (click)="onEditPlacement(placement)"
+                      title="Edit Placement"
+                    >
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                  }
+                  @if (canDeletePlacement()) {
+                    <button
+                      class="btn btn-sm btn-danger"
+                      (click)="onDeletePlacement(placement)"
+                      title="Delete Placement"
+                    >
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

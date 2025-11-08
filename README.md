@@ -23,12 +23,46 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+BDJobs CMS - A NestJS-based Content Management System with Angular frontend.
+
+## Prerequisites
+
+- Node.js (v18 or higher)
+- MongoDB (local or cloud instance)
+- npm or yarn
 
 ## Project setup
 
 ```bash
+# Install dependencies
 $ npm install
+
+# Set up environment variables
+$ cp .env.example .env
+```
+
+**Important:** After copying `.env.example` to `.env`, update the following variables:
+
+- `MONGODB_URI` - Your MongoDB connection string (default: `mongodb://localhost:27017/bdjobs-cms`)
+- `JWT_SECRET` - A secure random string for JWT token signing (generate a secure one for production)
+- `PORT` - Application port (default: 3000)
+
+### Generate a secure JWT secret:
+```bash
+$ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
+```
+
+### Local MongoDB Setup (macOS):
+```bash
+# Install MongoDB using Homebrew
+$ brew tap mongodb/brew
+$ brew install mongodb-community
+
+# Start MongoDB service
+$ brew services start mongodb-community
+
+# Verify MongoDB is running
+$ mongosh --eval "db.adminCommand('ping')"
 ```
 
 ## Compile and run the project
