@@ -1,253 +1,340 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule, Router } from '@angular/router';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
-import { Users, UserQueryParams } from '../../services/users';
-import { User, UserRole } from '../../models/user.model';
-import { AuthService } from '../../services/auth.service';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { UserService, UsersQueryParams } from '../../services/user.service';
+import {
+  User,
+  UserRole,
+  CreateUserDto,
+  UpdateUserDto,
+} from '../../models/user.model';
+
+interface UserFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
 
 @Component({
   selector: 'app-users',
-  imports: [CommonModule, RouterModule, ReactiveFormsModule],
+  standalone: true,
+  imports: [CommonModule, FormsModule],
   templateUrl: './users.html',
-  styleUrl: './users.scss',
+  styleUrls: ['./users.scss'],
 })
 export class UsersComponent implements OnInit {
-  users: User[] = [];
-  loading = false;
-  error = '';
-  
-  // Pagination
-  currentPage = 1;
-  totalPages = 1;
-  totalUsers = 0;
-  pageSize = 10;
-  
-  // Filters
-  filterForm: FormGroup;
-  roleOptions: Array<{ value: UserRole | ''; label: string }> = [];
-  
-  // Current user
-  currentUser: User | null = null;
-  
-  // Enums for template
-  UserRole = UserRole;
+  private userService = inject(UserService);
+  private router = inject(Router);
 
-  constructor(
-    private usersService: Users,
-    private authService: AuthService,
-    private router: Router,
-    private fb: FormBuilder
-  ) {
-    this.filterForm = this.fb.group({
-      search: [''],
-      role: ['']
-    });
-  }
+  // Expose Math for template
+  readonly Math = Math;
 
-  ngOnInit(): void {
-    this.currentUser = this.authService.getCurrentUser();
-    this.initializeRoleOptions();
+  users = signal<User[]>([]);
+  loading = signal(false);
+  error = signal<string | null>(null);
+
+  currentPage = signal(1);
+  totalPages = signal(1);
+  totalUsers = signal(0);
+  pageSize = signal(10);
+
+  searchTerm = signal('');
+  selectedRole = signal<string>('');
+  sortBy = signal('createdAt');
+  sortOrder = signal<'asc' | 'desc'>('desc');
+
+  showModal = signal(false);
+  modalMode = signal<'create' | 'edit'>('create');
+  selectedUser = signal<User | null>(null);
+
+  formData = signal<UserFormData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    role: UserRole.VIEWER,
+  });
+
+  formErrors = signal<Record<string, string>>({});
+  submitting = signal(false);
+
+  showDeleteConfirm = signal(false);
+  userToDelete = signal<User | null>(null);
+  deleting = signal(false);
+
+  readonly roles = Object.values(UserRole);
+  readonly UserRole = UserRole;
+
+  hasUsers = computed(() => {
+    const users = this.users();
+    return users && users.length > 0;
+  });
+
+  ngOnInit() {
     this.loadUsers();
-    
-    // Subscribe to filter changes
-    this.filterForm.valueChanges.subscribe(() => {
-      this.currentPage = 1;
-      this.loadUsers();
-    });
   }
 
-  initializeRoleOptions(): void {
-    this.roleOptions = [
-      { value: '', label: 'All Roles' },
-      { value: UserRole.ADMIN, label: 'Administrator' },
-      { value: UserRole.EDITOR, label: 'Editor' },
-      { value: UserRole.AUTHOR, label: 'Author' },
-      { value: UserRole.VIEWER, label: 'Viewer' }
-    ];
-  }
+  loadUsers() {
+    this.loading.set(true);
+    this.error.set(null);
 
-  loadUsers(): void {
-    this.loading = true;
-    this.error = '';
-
-    const filters = this.filterForm.value;
-    const params: UserQueryParams = {
-      page: this.currentPage,
-      limit: this.pageSize
+    const params: UsersQueryParams = {
+      page: this.currentPage(),
+      limit: this.pageSize(),
+      sortBy: this.sortBy(),
+      sortOrder: this.sortOrder(),
     };
 
-    if (filters.search?.trim()) {
-      params.search = filters.search.trim();
+    if (this.searchTerm()) {
+      params.search = this.searchTerm();
     }
 
-    if (filters.role) {
-      params.role = filters.role;
+    if (this.selectedRole()) {
+      params.role = this.selectedRole();
     }
 
-    this.usersService.getUsers(params).subscribe({
+    this.userService.getUsers(params).subscribe({
       next: (response) => {
-        this.users = response.users;
-        this.currentPage = response.page;
-        this.totalPages = response.totalPages;
-        this.totalUsers = response.total;
-        this.loading = false;
+        console.log('Users loaded:', response);
+        this.users.set(response.data);
+        this.loading.set(false);
       },
-      error: (error) => {
-        console.error('Error loading users:', error);
-        this.error = 'Failed to load users. Please try again.';
-        this.loading = false;
-      }
+      error: (err) => {
+        this.error.set('Failed to load users. Please try again.');
+        this.loading.set(false);
+        console.error('Error loading users:', err);
+      },
     });
   }
 
-  onPageChange(page: number): void {
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
+  applyFilters() {
+    this.currentPage.set(1);
+    this.loadUsers();
+  }
+
+  clearFilters() {
+    this.searchTerm.set('');
+    this.selectedRole.set('');
+    this.currentPage.set(1);
+    this.loadUsers();
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
       this.loadUsers();
     }
   }
 
-  onCreateUser(): void {
-    this.router.navigate(['/users/create']);
+  openCreateModal() {
+    this.modalMode.set('create');
+    this.selectedUser.set(null);
+    this.formData.set({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role: UserRole.VIEWER,
+    });
+    this.formErrors.set({});
+    this.showModal.set(true);
   }
 
-  onEditUser(user: User): void {
-    this.router.navigate(['/users/edit', user._id]);
+  openEditModal(user: User) {
+    this.modalMode.set('edit');
+    this.selectedUser.set(user);
+    this.formData.set({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      password: '',
+      role: user.role,
+    });
+    this.formErrors.set({});
+    this.showModal.set(true);
   }
 
-  onDeleteUser(user: User): void {
-    if (user._id === this.currentUser?._id) {
-      alert('You cannot delete your own account.');
+  closeModal() {
+    this.showModal.set(false);
+    this.selectedUser.set(null);
+    this.formData.set({
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      role: UserRole.VIEWER,
+    });
+    this.formErrors.set({});
+  }
+
+  validateForm(): boolean {
+    const errors: Record<string, string> = {};
+    const data = this.formData();
+
+    if (!data.firstName.trim()) {
+      errors['firstName'] = 'First name is required';
+    }
+
+    if (!data.lastName.trim()) {
+      errors['lastName'] = 'Last name is required';
+    }
+
+    if (!data.email.trim()) {
+      errors['email'] = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      errors['email'] = 'Invalid email format';
+    }
+
+    if (this.modalMode() === 'create' && !data.password) {
+      errors['password'] = 'Password is required';
+    }
+
+    if (data.password && data.password.length < 6) {
+      errors['password'] = 'Password must be at least 6 characters';
+    }
+
+    this.formErrors.set(errors);
+    return Object.keys(errors).length === 0;
+  }
+
+  submitForm() {
+    if (!this.validateForm()) {
       return;
     }
 
-    if (confirm(`Are you sure you want to delete "${user.firstName} ${user.lastName}"?`)) {
-      this.usersService.deleteUser(user._id).subscribe({
+    this.submitting.set(true);
+    const data = this.formData();
+
+    if (this.modalMode() === 'create') {
+      const createDto: CreateUserDto = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        role: data.role,
+      };
+
+      this.userService.createUser(createDto).subscribe({
         next: () => {
-          this.loadUsers(); // Reload the list
+          this.submitting.set(false);
+          this.closeModal();
+          this.loadUsers();
         },
-        error: (error) => {
-          console.error('Error deleting user:', error);
-          alert('Failed to delete user. Please try again.');
-        }
+        error: (err: any) => {
+          this.submitting.set(false);
+          this.error.set(err.error?.message || 'Failed to create user');
+        },
+      });
+    } else {
+      const updateDto: UpdateUserDto = {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        role: data.role,
+      };
+
+      if (data.password) {
+        updateDto.password = data.password;
+      }
+
+      const userId = this.selectedUser()?._id;
+      if (!userId) return;
+
+      this.userService.updateUser(userId, updateDto).subscribe({
+        next: () => {
+          this.submitting.set(false);
+          this.closeModal();
+          this.loadUsers();
+        },
+        error: (err: any) => {
+          this.submitting.set(false);
+          this.error.set(err.error?.message || 'Failed to update user');
+        },
       });
     }
   }
 
-  onViewUser(user: User): void {
-    // For now, navigate to edit page. Later can be a separate view page
-    this.router.navigate(['/users/view', user._id]);
+  updateFormData(field: keyof UserFormData, value: any) {
+    this.formData.update((data) => ({
+      ...data,
+      [field]: value,
+    }));
   }
 
-  onChangeUserRole(user: User, newRole: UserRole): void {
-    if (user._id === this.currentUser?._id) {
-      alert('You cannot change your own role.');
-      return;
+  confirmDelete(user: User) {
+    this.userToDelete.set(user);
+    this.showDeleteConfirm.set(true);
+  }
+
+  cancelDelete() {
+    this.userToDelete.set(null);
+    this.showDeleteConfirm.set(false);
+  }
+
+  deleteUser() {
+    const user = this.userToDelete();
+    if (!user) return;
+
+    this.deleting.set(true);
+
+    this.userService.deleteUser(user._id).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.cancelDelete();
+        this.loadUsers();
+      },
+      error: (err: any) => {
+        this.deleting.set(false);
+        this.error.set(err.error?.message || 'Failed to delete user');
+      },
+    });
+  }
+
+  getRoleBadgeClass(role: UserRole): string {
+    switch (role) {
+      case UserRole.ADMIN:
+        return 'badge-danger';
+      case UserRole.EDITOR:
+        return 'badge-primary';
+      case UserRole.AUTHOR:
+        return 'badge-info';
+      case UserRole.VIEWER:
+        return 'badge-secondary';
+      default:
+        return 'badge-secondary';
     }
-
-    if (confirm(`Are you sure you want to change ${user.firstName} ${user.lastName}'s role to ${this.usersService.getRoleDisplayName(newRole)}?`)) {
-      this.usersService.updateUserRole(user._id, newRole).subscribe({
-        next: (updatedUser) => {
-          // Update the user in the local array
-          const index = this.users.findIndex(u => u._id === user._id);
-          if (index !== -1) {
-            this.users[index] = updatedUser;
-          }
-        },
-        error: (error) => {
-          console.error('Error updating user role:', error);
-          alert('Failed to update user role. Please try again.');
-        }
-      });
-    }
-  }
-
-  clearFilters(): void {
-    this.filterForm.reset();
-    this.currentPage = 1;
-    this.loadUsers();
-  }
-
-  canEditUser(user: User): boolean {
-    return this.usersService.canEditUser(user._id);
-  }
-
-  canDeleteUser(user: User): boolean {
-    // Cannot delete own account
-    if (user._id === this.currentUser?._id) return false;
-    
-    return this.usersService.canDeleteUser();
-  }
-
-  canCreateUser(): boolean {
-    return this.usersService.canCreateUser();
-  }
-
-  canUpdateUserRole(user: User): boolean {
-    // Cannot change own role
-    if (user._id === this.currentUser?._id) return false;
-    
-    return this.usersService.canUpdateUserRole();
-  }
-
-  getRoleDisplayName(role: UserRole): string {
-    return this.usersService.getRoleDisplayName(role);
-  }
-
-  getRoleColor(role: UserRole): string {
-    return this.usersService.getRoleColor(role);
   }
 
   formatDate(date: Date | string): string {
     return new Date(date).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric'
-    });
-  }
-
-  formatLastLogin(lastLogin: Date | string | null): string {
-    if (!lastLogin) return 'Never';
-    
-    return new Date(lastLogin).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
     });
   }
 
-  getMaxPage(): number {
-    return Math.min(this.currentPage * this.pageSize, this.totalUsers);
-  }
+  getPageNumbers(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
 
-  getPaginationNumbers(): number[] {
-    const delta = 2;
-    const range: number[] = [];
-    const rangeWithDots: number[] = [];
-
-    for (let i = Math.max(2, this.currentPage - delta); 
-         i <= Math.min(this.totalPages - 1, this.currentPage + delta); 
-         i++) {
-      range.push(i);
-    }
-
-    if (this.currentPage - delta > 2) {
-      rangeWithDots.push(1, -1);
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
     } else {
-      rangeWithDots.push(1);
+      if (current <= 3) {
+        pages.push(1, 2, 3, 4, -1, total);
+      } else if (current >= total - 2) {
+        pages.push(1, -1, total - 3, total - 2, total - 1, total);
+      } else {
+        pages.push(1, -1, current - 1, current, current + 1, -1, total);
+      }
     }
 
-    rangeWithDots.push(...range);
-
-    if (this.currentPage + delta < this.totalPages - 1) {
-      rangeWithDots.push(-1, this.totalPages);
-    } else {
-      rangeWithDots.push(this.totalPages);
-    }
-
-    return rangeWithDots;
+    return pages;
   }
 }

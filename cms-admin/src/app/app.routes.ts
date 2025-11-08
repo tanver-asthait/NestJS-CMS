@@ -10,12 +10,13 @@ import { CategoryForm } from './pages/categories/category-form/category-form';
 import { PlacementsComponent } from './pages/placements/placements';
 import { UsersComponent } from './pages/users/users';
 import { AuthGuard } from './guards/auth.guard';
+import { AdminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   // Public routes (no layout)
   { path: 'login', component: Login },
   { path: 'register', component: Register },
-  
+
   // Protected routes with layout
   {
     path: '',
@@ -31,10 +32,14 @@ export const routes: Routes = [
       { path: 'categories/create', component: CategoryForm },
       { path: 'categories/edit/:id', component: CategoryForm },
       { path: 'placements', component: PlacementsComponent },
-      { path: 'users', component: UsersComponent },
-    ]
+      {
+        path: 'users',
+        component: UsersComponent,
+        canActivate: [AdminGuard],
+      },
+    ],
   },
-  
+
   // Fallback
-  { path: '**', redirectTo: '/login' }
+  { path: '**', redirectTo: '/login' },
 ];
